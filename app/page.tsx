@@ -41,7 +41,7 @@ export default function Home() {
 
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start max-w-[375px] w-full">
+      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start px-4 max-w-full">
         <div className="relative w-full">
           <Image
             src="/images/top.png"
@@ -76,17 +76,17 @@ export default function Home() {
           className="text-white text-[16px] leading-relaxed"
           style={{
             fontFamily: 'var(--font-noto-serif-jp)',
-            padding: '10px 20px'
+            padding: '10px 0px'
           }}
         >
           読む前の自分には戻れなくなるような"毒書"を取り揃えております。<br />
           読後感（読み味）からあなたに合った1冊を探してください。
         </div>
-        <div className="flex gap-[1px]">
+        <div className="flex gap-[8px]">
           <div
+            className="flex-1"
             style={{
-              width: '187px',
-              padding: '10px 10px'
+              padding: '10px 0px'
             }}
           >
             <div
@@ -110,9 +110,9 @@ export default function Home() {
             />
           </div>
           <div
+            className="flex-1"
             style={{
-              width: '187px',
-              padding: '10px 10px'
+              padding: '10px 0px'
             }}
           >
             <div
@@ -157,6 +157,29 @@ export default function Home() {
             }}
           >
             検索
+          </button>
+        </div>
+        
+        <div className="w-full mt-5 space-y-3">
+          <div 
+            className="text-left text-[16px] leading-relaxed" 
+            style={{ 
+              fontFamily: 'var(--font-noto-serif-jp)', 
+              color: '#FFFFFF',
+              padding: '10px 0px'
+            }}
+          >
+            読んだ本の感想をぜひ投稿してください。<br />あなたの感想がサービスを育てます。
+          </div>
+          
+          <button
+            onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLScbARW9Cf18epK-a3mXcjoM4llCeOgvM4htsbrsldxNJ_gqAw/viewform?usp=header', '_blank')}
+            className="w-full px-6 py-2 rounded-md font-bold text-[16px] transition-colors bg-orange-500 text-black hover:bg-orange-600"
+            style={{
+              fontFamily: 'var(--font-noto-serif-jp)'
+            }}
+          >
+            感想を投稿する
           </button>
         </div>
       </main>

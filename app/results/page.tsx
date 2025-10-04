@@ -48,6 +48,13 @@ function ResultsPageContent() {
   const fetchRatings = async (results: SearchResult[]) => {
     const ratingsData: { [isbn: string]: { averageRating: number; totalRatings: number } } = {};
     for (const result of results) {
+      // ISBNが空の場合はスキップ
+      if (!result.isbn || result.isbn.trim() === '') {
+        console.warn('空のISBNをスキップ:', result);
+        ratingsData[result.isbn] = { averageRating: 0, totalRatings: 0 };
+        continue;
+      }
+      
       try {
         const response = await fetch(`/api/ratings?isbn=${result.isbn}`);
         if (response.ok) {
@@ -118,6 +125,20 @@ function ResultsPageContent() {
         
         // リトライ機能付きの楽天API呼び出し関数
         const fetchRakutenWithRetry = async (isbn: string, maxRetries: number = 3): Promise<RakutenBookInfo> => {
+          // ISBNが空の場合はスキップ
+          if (!isbn || isbn.trim() === '') {
+            console.warn('空のISBNをスキップ:', isbn);
+            return {
+              title: null,
+              author: null,
+              publisher: null,
+              publicationDate: null,
+              price: null,
+              imageUrl: null,
+              description: null
+            };
+          }
+          
           for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
               const response = await fetch(`/api/rakuten?isbn=${isbn}`);
@@ -269,21 +290,22 @@ function ResultsPageContent() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto py-8 px-4 max-w-full">
         {/* ヘッダー */}
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-6 gap-2" style={{ width: 'calc(100% - 8px)' }}>
           <button
             onClick={() => router.back()}
-            className="mr-4 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700"
+            className="px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 flex-shrink-0"
+            style={{ width: '80px' }}
           >
             ← 戻る
           </button>
-          <div className="flex-1 flex">
+          <div className="flex flex-1 gap-2">
             <input
               type="text"
               placeholder="検索キーワードを入力"
               defaultValue={searchResults.query}
-              className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-l border border-gray-600"
+              className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-l rounded-r-none border border-gray-600"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   const query = e.currentTarget.value.trim();
@@ -301,7 +323,8 @@ function ResultsPageContent() {
                   router.push(`/results?q=${encodeURIComponent(query)}`);
                 }
               }}
-              className="px-6 py-2 bg-orange-500 text-black font-bold rounded-r hover:bg-orange-600"
+              className="px-4 py-2 bg-orange-500 text-black font-bold rounded-r rounded-l-none hover:bg-orange-600 flex-shrink-0"
+              style={{ width: '80px' }}
             >
               検索
             </button>
@@ -317,18 +340,18 @@ function ResultsPageContent() {
 
         {/* 注意書き */}
         <div className="mb-6 p-4 bg-gray-800 rounded">
-          <p className="text-sm text-gray-300 mb-2">
+          <p className="text-xs text-gray-300 mb-2">
             ※ 価格等は変動する可能性があります。最新情報は各販売サイトでご確認ください。
           </p>
-          <p className="text-sm text-gray-300">
+          <p className="text-xs text-gray-300">
             ※ 楽天ブックスに登録がない書籍に関しては、書影その他情報が表示されない場合があります。
           </p>
         </div>
 
         {/* 検索結果 */}
-        <div className="p-4">
+        <div>
         <div className="text-lg mb-4">
-          「{searchResults.query}」の検索結果: {searchResults.total_count}件
+          「{searchResults.query}」が感想に登場する書籍: {searchResults.total_count}件
         </div>
         
         <div className="grid grid-cols-1 gap-4">
@@ -340,9 +363,9 @@ function ResultsPageContent() {
                 key={result.index}
                 className="bg-gray-900 rounded-lg p-4 border border-gray-700"
               >
-                <div className="flex gap-4">
+                <div className="flex flex-col md:flex-row gap-4">
                   {/* 書影 */}
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 mx-auto md:mx-0">
                     {bookInfo.imageUrl ? (
                       <img 
                         src={bookInfo.imageUrl} 
@@ -358,7 +381,7 @@ function ResultsPageContent() {
 
                   {/* 書籍情報 */}
                   <div className="flex-1">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       {/* 左側の情報 */}
                       <div className="space-y-2">
                         {/* タイトル */}
@@ -409,22 +432,11 @@ function ResultsPageContent() {
                           </div>
                         </div>
 
-                        {/* 出版社 */}
-                        <div>
-                          <div className="text-sm text-gray-400 mb-1">出版社</div>
-                          <div className="text-white">
-                            {bookInfo.publisher || '情報なし'}
-                          </div>
-                        </div>
                       </div>
                     </div>
 
-                    {/* 発行日・定価 */}
-                    <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                      <div>
-                        <span className="text-gray-400">発行日: </span>
-                        <span className="text-white">{bookInfo.publicationDate || '情報なし'}</span>
-                      </div>
+                    {/* 定価 */}
+                    <div className="mb-4 text-sm">
                       <div>
                         <span className="text-gray-400">定価: </span>
                         <span className="text-white">{bookInfo.price ? `${bookInfo.price}円` : '情報なし'}</span>
@@ -470,15 +482,28 @@ function ResultsPageContent() {
 
                     {/* タイトルクリックで詳細画面へ */}
                     <div className="mt-4">
-                      <button
-                        onClick={() => {
-                          const query = searchResults?.query || "";
-                          router.push(`/results/${result.isbn}?q=${encodeURIComponent(query)}`);
-                        }}
-                        className="w-full py-2 px-4 bg-orange-500 text-black font-bold rounded hover:bg-orange-400 transition-colors"
-                      >
-                        {bookInfo.title || result.title}
-                      </button>
+                      {result.isbn && result.isbn.trim() !== '' ? (
+                        <button
+                          onClick={() => {
+                            try {
+                              const query = searchResults?.query || "";
+                              console.log('Button clicked:', { isbn: result.isbn, query });
+                              const url = `/results/${result.isbn}?q=${encodeURIComponent(query)}`;
+                              window.location.href = url;
+                            } catch (error) {
+                              console.error('Navigation error:', error);
+                            }
+                          }}
+                          className="w-full py-2 px-4 bg-orange-500 text-black font-bold rounded hover:bg-orange-400 transition-colors"
+                        >
+                          {bookInfo.title || result.title}
+                        </button>
+                      ) : (
+                        <div className="w-full py-2 px-4 bg-gray-600 text-gray-300 font-bold rounded text-center">
+                          {bookInfo.title || result.title}
+                          <div className="text-xs text-gray-400 mt-1">詳細情報なし</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

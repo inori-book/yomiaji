@@ -15,6 +15,11 @@ const WordCloud: React.FC<WordCloudProps> = ({ isbn }) => {
   const [words, setWords] = useState<WordData[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ワードクラウドのサイズを定義
+  const cloudSize = 300; // レーダーチャートと同じサイズに調整
+  const centerX = cloudSize / 2;
+  const centerY = cloudSize / 2;
+
   useEffect(() => {
     const fetchWords = async () => {
       try {
@@ -38,8 +43,8 @@ const WordCloud: React.FC<WordCloudProps> = ({ isbn }) => {
   if (loading) {
     return (
       <div style={{ 
-        width: '480px', 
-        height: '480px', 
+        width: `${cloudSize}px`, 
+        height: `${cloudSize}px`, 
         backgroundColor: '#f5f5f5', 
         borderRadius: '8px',
         display: 'flex',
@@ -60,8 +65,8 @@ const WordCloud: React.FC<WordCloudProps> = ({ isbn }) => {
   if (words.length === 0) {
     return (
       <div style={{ 
-        width: '480px', 
-        height: '480px', 
+        width: `${cloudSize}px`, 
+        height: `${cloudSize}px`, 
         backgroundColor: '#f5f5f5', 
         borderRadius: '8px',
         display: 'flex',
@@ -78,10 +83,10 @@ const WordCloud: React.FC<WordCloudProps> = ({ isbn }) => {
       </div>
     );
   }
-
+  
   // フォントサイズの範囲を定義
-  const minFontSize = 16;
-  const maxFontSize = 72;
+  const minFontSize = 12;
+  const maxFontSize = 48;
   const maxCount = Math.max(...words.map(w => w.count));
   const minCount = Math.min(...words.map(w => w.count));
 
@@ -89,14 +94,14 @@ const WordCloud: React.FC<WordCloudProps> = ({ isbn }) => {
   const getWordPosition = (index: number, total: number, fontSize: number) => {
     // 頻度の高い単語ほど中央に近く配置
     const centerWeight = fontSize / maxFontSize;
-    const baseRadius = 80 + (1 - centerWeight) * 120;
+    const baseRadius = 50 + (1 - centerWeight) * 80;
     
     // 角度を少しずつずらして重複を避ける
     const angle = (index / total) * 2 * Math.PI + (index * 0.1);
-    const radius = baseRadius + (index % 3) * 20;
+    const radius = baseRadius + (index % 3) * 15;
     
-    const x = 240 + radius * Math.cos(angle);
-    const y = 240 + radius * Math.sin(angle);
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
     
     return { x, y };
   };
@@ -119,14 +124,14 @@ const WordCloud: React.FC<WordCloudProps> = ({ isbn }) => {
 
   return (
     <div style={{ 
-      width: '480px', 
-      height: '480px', 
+      width: `${cloudSize}px`, 
+      height: `${cloudSize}px`, 
       backgroundColor: '#f5f5f5', 
       borderRadius: '8px',
       position: 'relative',
       overflow: 'hidden'
     }}>
-      <svg width="480" height="480" style={{ position: 'absolute', top: 0, left: 0 }}>
+      <svg width={cloudSize} height={cloudSize} style={{ position: 'absolute', top: 0, left: 0 }}>
         {words.map((wordData, index) => {
           const fontSize = getFontSize(wordData.count);
           const position = getWordPosition(index, words.length, fontSize);

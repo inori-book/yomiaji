@@ -21,7 +21,17 @@ export async function GET(request: NextRequest) {
       escape: '"'
     });
 
-    const bookRecord = records.find((record: any) => record.ISBN === isbn);
+    // BOMを除去してフィールド名を正規化
+    const normalizedRecords = records.map((record: any) => {
+      const normalized: any = {};
+      for (const [key, value] of Object.entries(record)) {
+        const cleanKey = key.replace(/^\ufeff/, ''); // BOMを除去
+        normalized[cleanKey] = value;
+      }
+      return normalized;
+    });
+
+    const bookRecord = normalizedRecords.find((record: any) => record.ISBN === isbn);
     
     if (!bookRecord) {
       return NextResponse.json({ 

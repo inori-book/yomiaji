@@ -28,10 +28,11 @@ const RadarChart: React.FC<RadarChartProps> = ({ data }) => {
   ];
 
   const maxValue = 5;
-  const centerX = 240;
-  const centerY = 240;
-  const radius = 150;
-  const labelRadius = 180;
+  const svgSize = 300; // SVGサイズを300x300に縮小
+  const centerX = svgSize / 2;
+  const centerY = svgSize / 2;
+  const radius = 90; // 半径も比例して縮小
+  const labelRadius = 110; // ラベル半径も比例して縮小
 
   // 各カテゴリの角度を計算（8分割）
   const getAngle = (index: number) => (index * 2 * Math.PI) / 8 - Math.PI / 2;
@@ -67,8 +68,8 @@ const RadarChart: React.FC<RadarChartProps> = ({ data }) => {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '20px' }}>
-      <svg width="480" height="480" style={{ backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+      <svg width={svgSize} height={svgSize} style={{ backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
         {/* グリッドライン */}
         {[1, 2, 3, 4, 5].map((level) => (
           <path
@@ -133,7 +134,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ data }) => {
               y={labelY}
               textAnchor="middle"
               dominantBaseline="middle"
-              fontSize="14"
+              fontSize="12"
               fill="#333"
               fontFamily="var(--font-geist-sans)"
             >

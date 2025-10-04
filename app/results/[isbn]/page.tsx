@@ -53,6 +53,7 @@ export default function BookDetailPage() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [averageRating, setAverageRating] = useState(0);
   const [totalRatings, setTotalRatings] = useState(0);
+  const [keywordCount, setKeywordCount] = useState(0);
 
   useEffect(() => {
     const fetchBookData = async () => {
@@ -68,12 +69,13 @@ export default function BookDetailPage() {
         const databaseResponse = await fetch(`/api/book-info?isbn=${isbn}`);
         if (databaseResponse.ok) {
           const databaseData = await databaseResponse.json();
-          if (databaseData.title) {
+          // データベースに情報がある場合は設定（titleがnullでも他の情報があれば設定）
+          if (databaseData.title || databaseData.author || databaseData.genre || databaseData.review) {
             setDatabaseInfo({
-              title: databaseData.title,
-              author: databaseData.author,
-              genre: databaseData.genre,
-              review: databaseData.review
+              title: databaseData.title || '',
+              author: databaseData.author || '',
+              genre: databaseData.genre || '',
+              review: databaseData.review || ''
             });
           }
         }
@@ -91,6 +93,24 @@ export default function BookDetailPage() {
           const ratingsData = await ratingsResponse.json();
           setAverageRating(ratingsData.averageRating);
           setTotalRatings(ratingsData.totalRatings);
+        }
+
+        // 検索クエリがある場合は、キーワード登場回数を取得
+        if (query) {
+          const searchResponse = await fetch('/api/search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query }),
+          });
+          if (searchResponse.ok) {
+            const searchData = await searchResponse.json();
+            const currentBook = searchData.results.find((result: any) => result.isbn === isbn);
+            if (currentBook) {
+              setKeywordCount(currentBook.keyword_count || 0);
+            }
+          }
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
@@ -139,6 +159,7 @@ export default function BookDetailPage() {
   // 表示用のタイトルと著者を決定（楽天データを優先、なければデータベースデータ）
   const displayTitle = rakutenInfo?.title || databaseInfo?.title || 'タイトル不明';
   const displayAuthor = rakutenInfo?.author || databaseInfo?.author || '著者不明';
+  
 
   if (loading) {
     return (
@@ -162,21 +183,22 @@ export default function BookDetailPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto py-8 px-4 max-w-full">
         {/* ヘッダー */}
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-6 gap-2" style={{ width: 'calc(100% - 8px)' }}>
           <button
             onClick={() => router.back()}
-            className="mr-4 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700"
+            className="px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 flex-shrink-0"
+            style={{ width: '80px' }}
           >
             ← 戻る
           </button>
-          <div className="flex-1 flex">
+          <div className="flex flex-1 gap-2">
             <input
               type="text"
               placeholder="検索キーワードを入力"
               defaultValue={query}
-              className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-l border border-gray-600"
+              className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-l rounded-r-none border border-gray-600"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   const query = e.currentTarget.value.trim();
@@ -194,7 +216,8 @@ export default function BookDetailPage() {
                   router.push(`/results?q=${encodeURIComponent(query)}`);
                 }
               }}
-              className="px-6 py-2 bg-orange-500 text-black font-bold rounded-r hover:bg-orange-600"
+              className="px-4 py-2 bg-orange-500 text-black font-bold rounded-r rounded-l-none hover:bg-orange-600 flex-shrink-0"
+              style={{ width: '80px' }}
             >
               検索
             </button>
@@ -214,10 +237,10 @@ export default function BookDetailPage() {
 
         {/* 注意書き */}
         <div className="mb-6 p-4 bg-gray-800 rounded">
-          <p className="text-sm text-gray-300 mb-2">
+          <p className="text-xs text-gray-300 mb-2">
             ※ 価格等は変動する可能性があります。最新情報は各販売サイトでご確認ください。
           </p>
-          <p className="text-sm text-gray-300">
+          <p className="text-xs text-gray-300">
             ※ 楽天ブックスに登録がない書籍に関しては、書影その他情報が表示されない場合があります。
           </p>
         </div>
@@ -227,7 +250,7 @@ export default function BookDetailPage() {
           <div className="flex flex-col md:flex-row gap-6">
             {/* 書影 */}
             {rakutenInfo?.imageUrl && (
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 mx-auto md:mx-0">
                 <Image
                   src={rakutenInfo.imageUrl}
                   alt={displayTitle}
@@ -240,8 +263,8 @@ export default function BookDetailPage() {
 
             {/* 書籍詳細 */}
             <div className="flex-1">
-              <h1 className="text-2xl font-bold mb-2">{displayTitle}</h1>
-              <p className="text-lg text-gray-300 mb-4">著者: {displayAuthor}</p>
+              <h1 className="text-2xl font-bold mb-2 text-center md:text-left">{displayTitle}</h1>
+              <p className="text-lg text-gray-300 mb-4 text-center md:text-left">著者: {displayAuthor}</p>
               
               <div className="space-y-2 mb-4">
                 <p><span className="font-semibold">出版社:</span> {rakutenInfo?.publisher || '情報なし'}</p>
@@ -249,6 +272,9 @@ export default function BookDetailPage() {
                 <p><span className="font-semibold">定価:</span> {rakutenInfo?.price ? `¥${rakutenInfo.price.toLocaleString()}` : '価格情報なし'}</p>
                 {databaseInfo?.genre && (
                   <p><span className="font-semibold">ジャンル:</span> {databaseInfo.genre}</p>
+                )}
+                {query && keywordCount > 0 && (
+                  <p><span className="font-semibold">キーワード登場回数:</span> {keywordCount}回</p>
                 )}
               </div>
 
@@ -285,20 +311,30 @@ export default function BookDetailPage() {
                     href={rakutenInfo.affiliateUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block px-6 py-3 bg-orange-500 text-black font-bold rounded hover:bg-orange-600 transition-colors"
+                    className="inline-block w-full md:w-auto px-6 py-3 bg-orange-500 text-black font-bold rounded hover:bg-orange-600 transition-colors text-center"
                   >
-                    商品ページを開く（楽天ブックス）
+                    商品ページを開く<br />（楽天ブックス）
                   </a>
                 </div>
               )}
 
               {/* この本を評価するボタン */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <button
                   onClick={() => setShowRatingModal(true)}
-                  className="px-6 py-3 bg-orange-500 text-black font-bold rounded hover:bg-orange-600 transition-colors"
+                  className="w-full md:w-auto px-6 py-3 bg-orange-500 text-black font-bold rounded hover:bg-orange-600 transition-colors"
                 >
                   この本を評価する
+                </button>
+              </div>
+              
+              {/* 感想を投稿するボタン */}
+              <div className="mb-4">
+                <button
+                  onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLScbARW9Cf18epK-a3mXcjoM4llCeOgvM4htsbrsldxNJ_gqAw/viewform?usp=header', '_blank')}
+                  className="w-full md:w-auto px-6 py-3 bg-orange-500 text-black font-bold rounded hover:bg-orange-600 transition-colors"
+                >
+                  感想を投稿する
                 </button>
               </div>
 
@@ -308,7 +344,9 @@ export default function BookDetailPage() {
                   <h3 className="text-lg font-semibold mb-4" style={{ fontFamily: 'var(--font-geist-sans)' }}>
                     読み味レーダーチャート
                   </h3>
-                  <RadarChart data={bookData} />
+                  <div className="flex justify-center md:justify-start">
+                    <RadarChart data={bookData} />
+                  </div>
                 </div>
               )}
 
@@ -317,7 +355,9 @@ export default function BookDetailPage() {
                 <h3 className="text-lg font-semibold mb-4" style={{ fontFamily: 'var(--font-geist-sans)' }}>
                   感想ワードクラウド
                 </h3>
-                <WordCloud isbn={isbn} />
+                <div className="flex justify-center md:justify-start">
+                  <WordCloud isbn={isbn} />
+                </div>
               </div>
             </div>
           </div>
