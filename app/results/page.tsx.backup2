@@ -1,0 +1,533 @@
+'use client';
+
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+
+interface SearchResult {
+  index: number;
+  title: string;
+  author: string;
+  genre: string;
+  review: string;
+  isbn: string;
+  keyword_count: number;
+  keywords: string[];
+}
+
+interface SearchResponse {
+  query: string;
+  results: SearchResult[];
+  total_count: number;
+}
+
+interface RakutenBookInfo {
+  title: string | null;
+  author: string | null;
+  publisher: string | null;
+  publicationDate: string | null;
+  price: number | null;
+  imageUrl: string | null;
+  description: string | null;
+}
+
+export default function ResultsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [searchResults, setSearchResults] = useState<SearchResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [rakutenInfo, setRakutenInfo] = useState<{ [isbn: string]: RakutenBookInfo }>({});
+  const [expandedBooks, setExpandedBooks] = useState<{ [isbn: string]: boolean }>({});
+
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (!query) {
+      setError('検索クエリが指定されていません');
+      setLoading(false);
+      return;
+    }
+
+    const performSearch = async () => {
+      try {
+        const response = await fetch('/api/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query }),
+        });
+
+        if (!response.ok) {
+          throw new Error('検索リクエストに失敗しました');
+        }
+
+        const data = await response.json();
+        setSearchResults(data);
+
+        // 楽天ブックスAPIから情報を取得
+        const rakutenData: { [isbn: string]: RakutenBookInfo } = {};
+        for (const result of data.results) {
+          try {
+            const rakutenResponse = await fetch(`/api/rakuten?isbn=${result.isbn}`);
+            if (rakutenResponse.ok) {
+              const rakutenInfo = await rakutenResponse.json();
+              rakutenData[result.isbn] = rakutenInfo;
+            }
+          } catch (err) {
+            console.error(`楽天ブックスAPI取得エラー (ISBN: ${result.isbn}):`, err);
+            rakutenData[result.isbn] = {
+              title: null,
+              author: null,
+              publisher: null,
+              publicationDate: null,
+              price: null,
+              imageUrl: null,
+              description: null
+            };
+          }
+        }
+        setRakutenInfo(rakutenData);
+
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '検索中にエラーが発生しました');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    performSearch();
+  }, [searchParams]);
+
+  const toggleExpanded = (isbn: string) => {
+    setExpandedBooks(prev => ({
+      ...prev,
+      [isbn]: !prev[isbn]
+    }));
+  };
+
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <svg
+          key={i}
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill={i <= rating ? "#FFCC00" : "none"}
+          stroke="#FFCC00"
+          strokeWidth="2"
+        >
+          <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+        </svg>
+      );
+    }
+    return stars;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl mb-4">検索中...</div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center max-w-[375px] w-full p-8">
+          <div className="text-xl mb-4 text-red-400">エラー</div>
+          <div className="mb-6">{error}</div>
+          <Link 
+            href="/"
+            className="inline-block bg-[#E72257] text-[#FFAE66] px-6 py-3 rounded-md font-bold hover:bg-[#D61F4E] transition-colors"
+          >
+            トップに戻る
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!searchResults) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">結果が見つかりません</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-[375px] mx-auto">
+        {/* 再検索エリア */}
+        <div
+          style={{
+            width: '375px',
+            height: '56px',
+            padding: '10px 10px'
+          }}
+          className="flex items-center"
+        >
+          {/* 戻る矢印 */}
+          <Link href="/" className="flex items-center justify-center w-6 h-6 mr-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 18L9 12L15 6" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </Link>
+          
+          {/* 検索窓 */}
+          <input
+            type="text"
+            defaultValue={searchResults?.query || ''}
+            className="flex-1 h-9 px-3 py-2 text-[14px] bg-white border border-[#CBD5E1] rounded-md focus:outline-none focus:border-[#94A3B8] placeholder-[#94A3B8] mr-1.5"
+            style={{
+              fontFamily: 'var(--font-inter)',
+              color: '#000000',
+              width: '255px'
+            }}
+            placeholder="検索キーワードを入力"
+          />
+          
+          {/* 検索ボタン */}
+          <button
+            className="w-[60px] h-9 bg-[#FF9500] text-black font-bold text-[16px] rounded-md hover:bg-[#E68500] transition-colors"
+            style={{
+              fontFamily: 'var(--font-noto-serif-jp)'
+            }}
+            onClick={() => {
+              const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+              if (searchInput && searchInput.value.trim()) {
+                router.push(`/results?q=${encodeURIComponent(searchInput.value.trim())}`);
+              }
+            }}
+          >
+            検索
+          </button>
+        </div>
+        
+        {/* 絞り込みボタン */}
+        <div className="px-10 pb-4">
+          <button
+            className="w-[86px] h-6 bg-[#FF9500] text-black text-[12px] rounded hover:bg-[#E68500] transition-colors"
+            style={{
+              fontFamily: 'var(--font-noto-serif-jp)'
+            }}
+            onClick={() => {
+              // 絞り込みモーダルを展開する処理（後で実装）
+              console.log('絞り込みモーダルを展開');
+            }}
+          >
+            絞り込み
+          </button>
+        </div>
+        
+        {/* パンくずリスト */}
+        <div
+          style={{
+            width: '375px',
+            height: '32px',
+            padding: '4px 10px 0px 10px'
+          }}
+          className="text-white text-[14px]"
+        >
+          <Link 
+            href="/"
+            className="text-white hover:underline"
+            style={{
+              fontFamily: 'var(--font-geist-sans)'
+            }}
+          >
+            TOP
+          </Link>
+          <span className="mx-1">＞</span>
+          <span style={{ fontFamily: 'var(--font-geist-sans)' }}>
+            検索キーワード「{searchResults?.query}」
+          </span>
+        </div>
+        
+        {/* 注意書き */}
+        <div
+          style={{
+            width: '375px',
+            height: '66px',
+            padding: '2px 10px 4px 10px'
+          }}
+          className="text-white text-[10px] leading-relaxed"
+        >
+          <div style={{ fontFamily: 'var(--font-geist-sans)' }}>
+            ※検索されたキーワードが感想中に多く登場する順にタイトルを表示します。<br />
+            ※楽天ブックスに登録がない書籍に関しては、書影その他情報が表示されない場合があります。
+          </div>
+        </div>
+        
+        {/* 検索結果 - 間隔0pxで縦に積む */}
+        <div style={{ gap: '0px' }}>
+          {searchResults.results.map((result, index) => {
+            const bookInfo = rakutenInfo[result.isbn] || {};
+            const isExpanded = expandedBooks[result.isbn] || false;
+            
+            return (
+              <div
+                key={result.index}
+                style={{
+                  width: '375px',
+                  height: '270px'
+                }}
+                className="mx-auto"
+              >
+                {/* ①タイトル */}
+                <button
+                  style={{
+                    width: '355px',
+                    height: '48px',
+                    padding: '10px',
+                    backgroundColor: '#FF8D28',
+                    color: '#000000',
+                    fontFamily: 'var(--font-geist-sans)',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => {
+                    // 詳細画面への遷移（後で実装）
+                    console.log('詳細画面へ遷移:', result.isbn);
+                  }}
+                >
+                  『{result.title}』{result.author}
+                </button>
+
+                {/* ②書影と③情報のコンテナ */}
+                <div className="flex mt-4" style={{ gap: '16px' }}>
+                  {/* ②書影 */}
+                  <div
+                    style={{
+                      width: '116px',
+                      height: '170px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#333',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      // 詳細画面への遷移（後で実装）
+                      console.log('詳細画面へ遷移:', result.isbn);
+                    }}
+                  >
+                    {bookInfo.imageUrl ? (
+                      <Image
+                        src={bookInfo.imageUrl}
+                        alt={result.title}
+                        width={116}
+                        height={170}
+                        style={{
+                          objectFit: 'contain',
+                          maxWidth: '116px',
+                          maxHeight: '170px'
+                        }}
+                      />
+                    ) : (
+                      <div className="text-gray-400 text-xs text-center">
+                        書影なし
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ③情報 */}
+                  <div
+                    style={{
+                      width: '210px',
+                      height: '170px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}
+                  >
+                    {/* ③-1 キーワード登場回数 */}
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-geist-sans)',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        color: '#FFFFFF'
+                      }}
+                    >
+                      キーワード登場回数：{result.keyword_count}回
+                    </div>
+
+                    {/* ③-2 ジャンル */}
+                    <div>
+                      <div
+                        style={{
+                          fontFamily: 'var(--font-geist-sans)',
+                          fontSize: '14px',
+                          color: '#FFFFFF',
+                          marginBottom: '4px'
+                        }}
+                      >
+                        ジャンル
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {result.genre.split(',').map((genre, genreIndex) => (
+                          <span
+                            key={genreIndex}
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '14px',
+                              backgroundColor: '#FFD293',
+                              borderRadius: '8px',
+                              padding: '4px 6px',
+                              color: '#000000'
+                            }}
+                          >
+                            {genre.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ③-3 ユーザー平均評価 */}
+                    <div>
+                      <div
+                        style={{
+                          fontFamily: 'var(--font-geist-sans)',
+                          fontSize: '14px',
+                          color: '#FFFFFF',
+                          marginBottom: '4px'
+                        }}
+                      >
+                        ユーザー平均評価
+                      </div>
+                      <div className="flex">
+                        {renderStars(3.5)} {/* 仮の評価値 */}
+                      </div>
+                    </div>
+
+                    {/* ③-4 出版社 */}
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-geist-sans)',
+                        fontSize: '12px',
+                        color: '#FFFFFF'
+                      }}
+                    >
+                      出版社：{bookInfo.publisher || '情報なし'}
+                    </div>
+
+                    {/* ③-5 発行日 */}
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-geist-sans)',
+                        fontSize: '12px',
+                        color: '#FFFFFF'
+                      }}
+                    >
+                      発行日：{bookInfo.publicationDate || '情報なし'}
+                    </div>
+
+                    {/* ③-6 定価 */}
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-geist-sans)',
+                        fontSize: '12px',
+                        color: '#FFFFFF'
+                      }}
+                    >
+                      定価：{bookInfo.price ? `${bookInfo.price}円` : '情報なし'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ④作品紹介 */}
+                <div
+                  style={{
+                    width: '355px',
+                    height: '32px',
+                    borderBottom: '1px solid #99A9B0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: '8px'
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-geist-sans)',
+                      fontSize: '16px',
+                      color: '#FFFFFF'
+                    }}
+                  >
+                    作品紹介
+                  </span>
+                  <button
+                    onClick={() => toggleExpanded(result.isbn)}
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#FFFFFF"
+                      strokeWidth="2"
+                      style={{
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s'
+                      }}
+                    >
+                      <polyline points="6,9 12,15 18,9"></polyline>
+                    </svg>
+                  </button>
+                </div>
+
+                {/* 作品紹介の詳細テキスト */}
+                {isExpanded && bookInfo.description && (
+                  <div
+                    style={{
+                      width: '355px',
+                      padding: '8px 0',
+                      fontFamily: 'var(--font-geist-sans)',
+                      fontSize: '14px',
+                      color: '#FFFFFF',
+                      lineHeight: '1.5'
+                    }}
+                  >
+                    {bookInfo.description}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {searchResults?.results.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-400 mb-4">検索結果が見つかりませんでした</p>
+            <p className="text-sm text-gray-500">
+              別のキーワードで検索してみてください
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
