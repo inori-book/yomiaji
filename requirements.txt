@@ -1,0 +1,3 @@
+pandas>=1.5.0
+mecab-python3>=1.0.0
+unidic-lite>=1.0.0 
