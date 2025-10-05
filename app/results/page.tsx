@@ -44,6 +44,7 @@ function ResultsPageContent() {
   const [rakutenLoading, setRakutenLoading] = useState(false);
   const [rakutenProgress, setRakutenProgress] = useState({ current: 0, total: 0 });
   const [ratings, setRatings] = useState<{ [isbn: string]: { averageRating: number; totalRatings: number } }>({});
+  const [apiStatus, setApiStatus] = useState<any>(null);
 
   const fetchRatings = async (results: SearchResult[]) => {
     const ratingsData: { [isbn: string]: { averageRating: number; totalRatings: number } } = {};
@@ -73,13 +74,29 @@ function ResultsPageContent() {
     return ratingsData;
   };
 
+  // API監視データを取得
+  const fetchApiStatus = async () => {
+    try {
+      const response = await fetch('/api/api-monitor?action=status');
+      if (response.ok) {
+        const status = await response.json();
+        setApiStatus(status);
+      }
+    } catch (error) {
+      console.error('API監視データ取得エラー:', error);
+    }
+  };
+
   useEffect(() => {
-    const query = searchParams.get('q');
+    const query = searchParams?.get('q');
     if (!query) {
       setError('検索クエリが指定されていません');
       setLoading(false);
       return;
     }
+
+    // API監視データを取得
+    fetchApiStatus();
 
     const performSearch = async () => {
       // キャッシュチェック
@@ -116,15 +133,18 @@ function ResultsPageContent() {
         const data = await response.json();
         setSearchResults(data);
         
+        // 優先度制御：キーワード登場回数でソート（既にソート済み）
+        const prioritizedResults = data.results.slice(0, 8); // 上位8件まで拡張
+        
         // 楽天APIの取得開始
         setRakutenLoading(true);
-        setRakutenProgress({ current: 0, total: data.results.length });
+        setRakutenProgress({ current: 0, total: prioritizedResults.length });
 
-        // 楽天ブックスAPIから情報を取得（リトライ機能付き）
+        // 楽天ブックスAPIから情報を取得（キャッシュ機能付き）
         const rakutenData: { [isbn: string]: RakutenBookInfo } = {};
         
-        // リトライ機能付きの楽天API呼び出し関数
-        const fetchRakutenWithRetry = async (isbn: string, maxRetries: number = 3): Promise<RakutenBookInfo> => {
+        // キャッシュ機能付きの楽天API呼び出し関数
+        const fetchRakutenWithCache = async (isbn: string): Promise<RakutenBookInfo> => {
           // ISBNが空の場合はスキップ
           if (!isbn || isbn.trim() === '') {
             console.warn('空のISBNをスキップ:', isbn);
@@ -139,55 +159,38 @@ function ResultsPageContent() {
             };
           }
           
-          for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-              const response = await fetch(`/api/rakuten?isbn=${isbn}`);
-              if (response.ok) {
-                return await response.json();
-              } else if (response.status === 429 && attempt < maxRetries) {
-                // レート制限の場合は待機してリトライ
-                const waitTime = Math.pow(2, attempt) * 1000; // 指数バックオフ
-                console.log(`楽天API レート制限 (ISBN: ${isbn}), ${waitTime}ms待機してリトライ (${attempt}/${maxRetries})`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-                continue;
-              } else {
-                throw new Error(`HTTP ${response.status}`);
-              }
-            } catch (error) {
-              if (attempt === maxRetries) {
-                console.error(`楽天API取得失敗 (ISBN: ${isbn}):`, error);
-                return {
-                  title: null,
-                  author: null,
-                  publisher: null,
-                  publicationDate: null,
-                  price: null,
-                  imageUrl: null,
-                  description: null
-                };
-              }
-              const waitTime = Math.pow(2, attempt) * 1000;
-              console.log(`楽天API エラー (ISBN: ${isbn}), ${waitTime}ms待機してリトライ (${attempt}/${maxRetries})`);
-              await new Promise(resolve => setTimeout(resolve, waitTime));
+          try {
+            // キャッシュAPIを使用
+            const response = await fetch(`/api/rakuten-cache?isbn=${encodeURIComponent(isbn)}`);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const info = await response.json();
+            console.log(`楽天API取得成功 (ISBN: ${isbn}, キャッシュ: ${info.cached ? 'Yes' : 'No'})`);
+            return info;
+          } catch (error) {
+            console.error(`楽天API取得失敗 (ISBN: ${isbn}):`, error);
+            return {
+              title: null,
+              author: null,
+              publisher: null,
+              publicationDate: null,
+              price: null,
+              imageUrl: null,
+              description: null
+            };
           }
-          return {
-            title: null,
-            author: null,
-            publisher: null,
-            publicationDate: null,
-            price: null,
-            imageUrl: null,
-            description: null
-          };
         };
         
-        for (let i = 0; i < data.results.length; i++) {
-          const result = data.results[i];
-          rakutenData[result.isbn] = await fetchRakutenWithRetry(result.isbn);
-          setRakutenProgress({ current: i + 1, total: data.results.length });
-          // レート制限回避のため少し待機
-          await new Promise(resolve => setTimeout(resolve, 100));
+        // 優先度順に楽天APIを呼び出し（キャッシュ機能付き）
+        for (let i = 0; i < prioritizedResults.length; i++) {
+          const result = prioritizedResults[i];
+          rakutenData[result.isbn] = await fetchRakutenWithCache(result.isbn);
+          setRakutenProgress({ current: i + 1, total: prioritizedResults.length });
+          // キャッシュ機能により待機時間を短縮
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
         setRakutenInfo(rakutenData);
         setRakutenLoading(false);
@@ -202,6 +205,9 @@ function ResultsPageContent() {
           ratings: ratingsData
         };
         sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        
+        // API監視データを更新
+        fetchApiStatus();
       } catch (err) {
         setError(err instanceof Error ? err.message : '検索中にエラーが発生しました');
       } finally {
@@ -280,32 +286,33 @@ function ResultsPageContent() {
 
   if (!searchResults) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl">検索結果が見つかりませんでした</div>
-        </div>
+      <div className="min-h-screen bg-teal-900">
+        <main className="max-w-[375px] mx-auto bg-gray-900 min-h-screen px-4 py-4">
+          <div className="text-center text-white">
+            <div className="text-xl">検索結果が見つかりませんでした</div>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-        <div className="container mx-auto py-8 px-4 max-w-full">
+    <div className="min-h-screen bg-teal-900">
+      <main className="max-w-[375px] lg:max-w-[800px] xl:max-w-[1200px] mx-auto bg-gray-900 min-h-screen px-4 py-4">
         {/* ヘッダー */}
-        <div className="flex items-center mb-6 gap-2" style={{ width: 'calc(100% - 8px)' }}>
+        <div className="flex flex-col md:flex-row items-center mb-6 gap-2">
           <button
             onClick={() => router.back()}
-            className="px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 flex-shrink-0"
-            style={{ width: '80px' }}
+            className="w-full md:w-auto px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 flex-shrink-0 text-sm"
           >
             ← 戻る
           </button>
-          <div className="flex flex-1 gap-2">
+          <div className="flex w-full gap-2">
             <input
               type="text"
               placeholder="検索キーワードを入力"
               defaultValue={searchResults.query}
-              className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-l rounded-r-none border border-gray-600"
+              className="flex-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-600 text-sm"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   const query = e.currentTarget.value.trim();
@@ -323,13 +330,13 @@ function ResultsPageContent() {
                   router.push(`/results?q=${encodeURIComponent(query)}`);
                 }
               }}
-              className="px-4 py-2 bg-orange-500 text-black font-bold rounded-r rounded-l-none hover:bg-orange-600 flex-shrink-0"
-              style={{ width: '80px' }}
+              className="px-4 py-2 bg-orange-500 text-black font-bold rounded hover:bg-orange-600 flex-shrink-0 text-sm"
             >
               検索
             </button>
           </div>
         </div>
+
 
         {/* パンくずリスト */}
         <div className="mb-6">
@@ -354,7 +361,7 @@ function ResultsPageContent() {
           「{searchResults.query}」が感想に登場する書籍: {searchResults.total_count}件
         </div>
         
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {searchResults.results.map((result) => {
             const bookInfo = rakutenInfo[result.isbn] || {};
             
@@ -521,7 +528,7 @@ function ResultsPageContent() {
           </div>
         )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

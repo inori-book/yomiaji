@@ -80,11 +80,30 @@ export default function BookDetailPage() {
           }
         }
 
-        // 楽天APIから情報を取得
-        const rakutenResponse = await fetch(`/api/rakuten?isbn=${isbn}`);
+        // 楽天APIから情報を取得（キャッシュ機能付き）
+        const rakutenResponse = await fetch(`/api/rakuten-cache?isbn=${isbn}`);
         if (rakutenResponse.ok) {
           const rakutenData = await rakutenResponse.json();
           setRakutenInfo(rakutenData);
+          
+          // バックグラウンド更新：検索結果画面のキャッシュも更新
+          if (!rakutenData.cached) {
+            // 新しく取得したデータを検索結果画面のキャッシュに反映
+            const searchCacheKey = `search_${query}`;
+            const cachedSearchData = sessionStorage.getItem(searchCacheKey);
+            if (cachedSearchData) {
+              try {
+                const parsedData = JSON.parse(cachedSearchData);
+                if (parsedData.rakutenInfo) {
+                  parsedData.rakutenInfo[isbn] = rakutenData;
+                  sessionStorage.setItem(searchCacheKey, JSON.stringify(parsedData));
+                  console.log(`検索結果キャッシュを更新: ${isbn}`);
+                }
+              } catch (error) {
+                console.error('検索結果キャッシュ更新エラー:', error);
+              }
+            }
+          }
         }
 
         // 評価データを取得
@@ -182,23 +201,22 @@ export default function BookDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-        <div className="container mx-auto py-8 px-4 max-w-full">
+    <div className="min-h-screen bg-teal-900">
+      <main className="max-w-[375px] lg:max-w-[800px] xl:max-w-[1200px] mx-auto bg-gray-900 min-h-screen px-4 py-4">
         {/* ヘッダー */}
-        <div className="flex items-center mb-6 gap-2" style={{ width: 'calc(100% - 8px)' }}>
+        <div className="flex flex-col md:flex-row items-center mb-6 gap-2">
           <button
             onClick={() => router.back()}
-            className="px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 flex-shrink-0"
-            style={{ width: '80px' }}
+            className="w-full md:w-auto px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 flex-shrink-0 text-sm"
           >
             ← 戻る
           </button>
-          <div className="flex flex-1 gap-2">
+          <div className="flex w-full gap-2">
             <input
               type="text"
               placeholder="検索キーワードを入力"
               defaultValue={query}
-              className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-l rounded-r-none border border-gray-600"
+              className="flex-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-600 text-sm"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   const query = e.currentTarget.value.trim();
@@ -216,8 +234,7 @@ export default function BookDetailPage() {
                   router.push(`/results?q=${encodeURIComponent(query)}`);
                 }
               }}
-              className="px-4 py-2 bg-orange-500 text-black font-bold rounded-r rounded-l-none hover:bg-orange-600 flex-shrink-0"
-              style={{ width: '80px' }}
+              className="px-4 py-2 bg-orange-500 text-black font-bold rounded hover:bg-orange-600 flex-shrink-0 text-sm"
             >
               検索
             </button>
@@ -371,7 +388,7 @@ export default function BookDetailPage() {
           bookTitle={displayTitle}
           onRatingSubmitted={handleRatingSubmitted}
         />
-      </div>
+      </main>
     </div>
   );
 }

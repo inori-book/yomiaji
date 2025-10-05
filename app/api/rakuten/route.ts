@@ -15,10 +15,10 @@ function normalizeIsbn(isbn: string): string | null {
   return null;
 }
 
-// レート制限管理（簡易版）
+// レート制限管理（初期リリース用）
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1分
-const RATE_LIMIT_MAX_REQUESTS = 100; // 1分間に100リクエスト
+const RATE_LIMIT_WINDOW = 24 * 60 * 60 * 1000; // 24時間
+const RATE_LIMIT_MAX_REQUESTS = 600; // 1日あたり600リクエスト（初期リリース用）
 
 function checkRateLimit(userId: string = "default"): boolean {
   const now = Date.now();
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
 
     // レート制限チェック
     if (!checkRateLimit("user")) {
-      console.log('レート制限に達しました（1分間に100リクエスト制限）');
+      console.log('レート制限に達しました（1日あたり600リクエスト制限）');
       return NextResponse.json({
         title: null,
         author: null,

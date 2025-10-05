@@ -40,9 +40,9 @@ export default function Home() {
   };
 
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start px-4 max-w-full">
-        <div className="relative w-full">
+    <div className="font-sans min-h-screen bg-teal-900">
+      <main className="max-w-[375px] lg:max-w-[800px] xl:max-w-[1200px] mx-auto bg-gray-900 min-h-screen px-4 py-4">
+        <div className="relative w-full mb-6">
           <Image
             src="/images/top.png"
             alt="YOMIAJI: βテスト版 - 一読み味で探す毒書体験"
@@ -52,28 +52,28 @@ export default function Home() {
             className="w-full h-auto"
           />
           <div 
-            className="absolute text-white font-bold text-[32px] leading-none"
+            className="absolute text-white font-bold text-[28px] sm:text-[32px] leading-none"
             style={{
               fontFamily: 'var(--font-noto-serif-jp)',
-              left: '27px',
-              top: '64px'
+              left: '20px',
+              top: '50px'
             }}
           >
             YOMIAJI：βテスト版
           </div>
           <div 
-            className="absolute text-white font-bold text-[24px] leading-none"
+            className="absolute text-white font-bold text-[20px] sm:text-[24px] leading-none"
             style={{
               fontFamily: 'var(--font-noto-serif-jp)',
-              left: '62px',
-              top: '149px'
+              left: '40px',
+              top: '120px'
             }}
           >
             －読み味で探す"毒書"体験
           </div>
         </div>
         <div 
-          className="text-white text-[16px] leading-relaxed"
+          className="text-white text-[14px] sm:text-[16px] leading-relaxed mb-6 text-left md:text-center"
           style={{
             fontFamily: 'var(--font-noto-serif-jp)',
             padding: '10px 0px'
@@ -82,15 +82,10 @@ export default function Home() {
           読む前の自分には戻れなくなるような"毒書"を取り揃えております。<br />
           読後感（読み味）からあなたに合った1冊を探してください。
         </div>
-        <div className="flex gap-[8px]">
-          <div
-            className="flex-1"
-            style={{
-              padding: '10px 0px'
-            }}
-          >
+        <div className="flex flex-col md:flex-row gap-2 mb-6">
+          <div className="flex-1">
             <div
-              className="text-white text-[14px] font-semibold mb-2"
+              className="text-white text-[12px] sm:text-[14px] font-semibold mb-2"
               style={{
                 fontFamily: 'var(--font-noto-serif-jp)'
               }}
@@ -102,21 +97,16 @@ export default function Home() {
               placeholder="例）怖い"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="w-full px-3 py-2 text-[14px] bg-white border border-[#CBD5E1] rounded-md focus:outline-none focus:border-[#94A3B8] placeholder-[#94A3B8]"
+              className="w-full px-3 py-2 text-[12px] sm:text-[14px] bg-white border border-[#CBD5E1] rounded-md focus:outline-none focus:border-[#94A3B8] placeholder-[#94A3B8]"
               style={{
                 fontFamily: 'var(--font-inter)',
                 color: '#000000'
               }}
             />
           </div>
-          <div
-            className="flex-1"
-            style={{
-              padding: '10px 0px'
-            }}
-          >
+          <div className="flex-1">
             <div
-              className="text-white text-[14px] font-semibold mb-2"
+              className="text-white text-[12px] sm:text-[14px] font-semibold mb-2"
               style={{
                 fontFamily: 'var(--font-noto-serif-jp)'
               }}
@@ -126,7 +116,7 @@ export default function Home() {
             <select
               value={selectedOption}
               onChange={(e) => setSelectedOption(e.target.value)}
-              className="w-full px-3 py-2 text-[14px] bg-white border border-[#CBD5E1] rounded-md focus:outline-none focus:border-[#94A3B8] text-[#94A3B8] appearance-none"
+              className="w-full px-3 py-2 text-[12px] sm:text-[14px] bg-white border border-[#CBD5E1] rounded-md focus:outline-none focus:border-[#94A3B8] text-[#94A3B8] appearance-none"
               style={{
                 fontFamily: 'var(--font-inter)'
               }}
@@ -143,11 +133,11 @@ export default function Home() {
             </select>
           </div>
         </div>
-        <div className="w-full mt-5">
+        <div className="w-full mb-6">
           <button
             onClick={handleSearch}
             disabled={!isSearchActive}
-            className={`w-full px-6 py-2 rounded-md font-bold text-[16px] transition-colors ${
+            className={`w-full px-6 py-3 rounded-md font-bold text-[14px] sm:text-[16px] transition-colors ${
               isSearchActive
                 ? 'bg-orange-500 text-black hover:bg-orange-600'
                 : 'bg-gray-500 text-gray-300 cursor-not-allowed'
@@ -160,9 +150,9 @@ export default function Home() {
           </button>
         </div>
         
-        <div className="w-full mt-5 space-y-3">
+        <div className="w-full space-y-3">
           <div 
-            className="text-left text-[16px] leading-relaxed" 
+            className="text-left md:text-center text-[14px] sm:text-[16px] leading-relaxed" 
             style={{ 
               fontFamily: 'var(--font-noto-serif-jp)', 
               color: '#FFFFFF',
@@ -174,7 +164,7 @@ export default function Home() {
           
           <button
             onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLScbARW9Cf18epK-a3mXcjoM4llCeOgvM4htsbrsldxNJ_gqAw/viewform?usp=header', '_blank')}
-            className="w-full px-6 py-2 rounded-md font-bold text-[16px] transition-colors bg-orange-500 text-black hover:bg-orange-600"
+            className="w-full px-6 py-3 rounded-md font-bold text-[14px] sm:text-[16px] transition-colors bg-orange-500 text-black hover:bg-orange-600"
             style={{
               fontFamily: 'var(--font-noto-serif-jp)'
             }}
