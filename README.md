@@ -1,50 +1,93 @@
-<div align="center">
-  <a href="https://nextjs.org">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://assets.vercel.com/image/upload/v1662130559/nextjs/Icon_dark_background.png">
-      <img alt="Next.js logo" src="https://assets.vercel.com/image/upload/v1662130559/nextjs/Icon_light_background.png" height="128">
-    </picture>
-  </a>
-  <h1>Next.js</h1>
+# YOMIAJI: βテスト版
 
-<a href="https://vercel.com"><img alt="Vercel logo" src="https://img.shields.io/badge/MADE%20BY%20Vercel-000000.svg?style=for-the-badge&logo=Vercel&labelColor=000"></a>
-<a href="https://www.npmjs.com/package/next"><img alt="NPM version" src="https://img.shields.io/npm/v/next.svg?style=for-the-badge&labelColor=000000"></a>
-<a href="https://github.com/vercel/next.js/blob/canary/license.md"><img alt="License" src="https://img.shields.io/npm/l/next.svg?style=for-the-badge&labelColor=000000"></a>
-<a href="https://github.com/vercel/next.js/discussions"><img alt="Join the community on GitHub" src="https://img.shields.io/badge/Join%20the%20community-blueviolet.svg?style=for-the-badge&logo=Next.js&labelColor=000000&logoWidth=20"></a>
+読み味で探す"毒書"体験
 
-</div>
+## 📖 概要
 
-## Getting Started
+YOMIAJIは、読む前の自分には戻れなくなるような"毒書"を、読後感（読み味）から探すことができる書籍検索アプリケーションです。
 
-Used by some of the world's largest companies, Next.js enables you to create full-stack web applications by extending the latest React features, and integrating powerful Rust-based JavaScript tooling for the fastest builds.
+## ✨ 主な機能
 
-- Visit our [Learn Next.js](https://nextjs.org/learn) course to get started with Next.js.
-- Visit the [Next.js Showcase](https://nextjs.org/showcase) to see more sites built with Next.js.
+- **キーワード検索**: フリーテキストまたは候補から検索
+- **読み味分析**: 感想文から形容詞・形容動詞を抽出
+- **楽天ブックス連携**: 書影、価格、出版社情報を表示
+- **レスポンシブデザイン**: スマートフォンからデスクトップまで対応
+- **ユーザー評価**: 5段階評価システム
 
-## Documentation
+## 🚀 技術スタック
 
-Visit [https://nextjs.org/docs](https://nextjs.org/docs) to view the full documentation.
+- **フロントエンド**: Next.js 15, React, TypeScript
+- **スタイリング**: Tailwind CSS
+- **バックエンド**: Next.js API Routes
+- **自然言語処理**: MeCab (Python)
+- **外部API**: 楽天ブックスAPI
+- **データ処理**: Pandas, CSV
 
-## Community
+## 🛠️ セットアップ
 
-The Next.js community can be found on [GitHub Discussions](https://github.com/vercel/next.js/discussions) where you can ask questions, voice ideas, and share your projects with other people.
+### 前提条件
 
-To chat with other community members you can join the Next.js [Discord](https://nextjs.org/discord) server.
+- Node.js 18以上
+- Python 3.8以上
+- MeCab (日本語形態素解析)
 
-Do note that our [Code of Conduct](https://github.com/vercel/next.js/blob/canary/CODE_OF_CONDUCT.md) applies to all Next.js community channels. Users are **highly encouraged** to read and adhere to it to avoid repercussions.
+### インストール
 
-## Contributing
+1. リポジトリをクローン
+```bash
+git clone https://github.com/inori-book/yomiaji.git
+cd yomiaji
+```
 
-Contributions to Next.js are welcome and highly appreciated. However, before you jump right into it, we would like you to review our [Contribution Guidelines](/contributing.md) to make sure you have a smooth experience contributing to Next.js.
+2. 依存関係をインストール
+```bash
+npm install
+pip install -r requirements.txt
+```
 
-### Good First Issues:
+3. 環境変数を設定
+```bash
+cp .env.local.example .env.local
+# .env.localに楽天ブックスAPIキーを設定
+```
 
-We have a list of **[good first issues](https://github.com/vercel/next.js/labels/%22good%20first%20issue%22)** that contain bugs that have a relatively limited scope. This is a great place for newcomers and beginners alike to get started, gain experience, and get familiar with our contribution process.
+4. 開発サーバーを起動
+```bash
+npm run dev
+```
 
----
+## 📊 データ構造
 
-## Security
+- `public/database.csv`: 書籍データ（タイトル、著者、感想、ジャンル、ISBN）
+- `public/abstractwords.txt`: 追加抽出対象の抽象語
+- `public/stopwords.txt`: 除外対象のストップワード
 
-If you believe you have found a security vulnerability in Next.js, we encourage you to **_responsibly disclose this and NOT open a public issue_**. We will investigate all legitimate reports.
+## 🔧 API エンドポイント
 
-Our preference is that you make use of GitHub's private vulnerability reporting feature to disclose potential security vulnerabilities in our Open Source Software. To do this, please visit [https://github.com/vercel/next.js/security](https://github.com/vercel/next.js/security) and click the "Report a vulnerability" button.
+- `POST /api/search`: 書籍検索
+- `GET /api/keywords`: キーワード一覧取得
+- `GET /api/rakuten`: 楽天ブックス情報取得
+- `GET /api/ratings`: ユーザー評価取得
+
+## 📱 レスポンシブ対応
+
+- **スマートフォン**: 375px幅最適化
+- **タブレット**: 768px以上で横並びレイアウト
+- **デスクトップ**: 1200px以上で3カラム表示
+
+## 🎯 バージョン履歴
+
+- **v1.2.0**: 楽天API最適化とレスポンシブ改善
+- **v1.0-complete**: 初期完成版
+
+## 📄 ライセンス
+
+このプロジェクトはMITライセンスの下で公開されています。
+
+## 🤝 コントリビューション
+
+プルリクエストやイシューの報告を歓迎します。
+
+## 📞 お問い合わせ
+
+プロジェクトに関する質問やフィードバックは、GitHubのIssuesまでお願いします。
