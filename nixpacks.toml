@@ -1,10 +1,10 @@
 [phases.setup]
 nixPkgs = ["nodejs_18", "python3"]
 
-[phases.build]
+[phases.install]
 cmds = ["npm ci"]
 
-[phases.install]
+[phases.build]
 cmds = ["npm run build"]
 
 [start]
