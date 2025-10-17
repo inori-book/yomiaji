@@ -119,7 +119,6 @@ export default function RatingModal({
           fontSize: '16px',
           marginBottom: '20px',
           textAlign: 'center',
-          color: '#000000',
           color: '#666',
         }}>
           『{bookTitle}』
