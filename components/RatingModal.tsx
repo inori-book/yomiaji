@@ -154,7 +154,6 @@ export default function RatingModal({
         {selectedRating > 0 && (
           <p style={{
             textAlign: 'center',
-          color: '#000000',
             fontSize: '16px',
             marginBottom: '20px',
             color: '#333',
