@@ -42,7 +42,7 @@ export default function BookDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const isbn = params.isbn as string;
+  const isbn = params?.isbn as string;
   const query = searchParams.get('q') || '';
 
   const [bookData, setBookData] = useState<BookData | null>(null);
