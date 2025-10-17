@@ -4,6 +4,24 @@ import path from 'path';
 import { parse } from 'csv-parse/sync';
 import { spawn } from 'child_process';
 
+// CSVレコードの型定義
+interface BookRecord {
+  title: string;
+  author: string;
+  review: string;
+  genre: string;
+  erotic: string;
+  grotesque: string;
+  insane: string;
+  paranomal: string;
+  esthetic: string;
+  action: string;
+  painful: string;
+  mystery: string;
+  date: string;
+  ISBN: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -29,10 +47,10 @@ export async function GET(request: NextRequest) {
       skip_empty_lines: true,
       quote: '"',
       escape: '"'
-    });
+    }) as BookRecord[];
 
     // 指定されたISBNのレビューを取得
-    const bookRecord = records.find((record: any) => record.ISBN === isbn);
+    const bookRecord = records.find(record => record.ISBN === isbn);
     if (!bookRecord || !bookRecord.review) {
       return NextResponse.json({ words: [] });
     }
@@ -88,7 +106,7 @@ export async function GET(request: NextRequest) {
 
     // 同じジャンルの他のレビューからもキーワードを抽出して頻度を増やす
     const genre = bookRecord.genre;
-    const sameGenreBooks = records.filter((record: any) => record.genre === genre && record.ISBN !== isbn);
+    const sameGenreBooks = records.filter(record => record.genre === genre && record.ISBN !== isbn);
     
     for (const book of sameGenreBooks.slice(0, 5)) { // 最大5冊まで
       if (book.review) {
