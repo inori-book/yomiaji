@@ -59,7 +59,7 @@ export default function BookDetailPage() {
     const fetchBookData = async () => {
       try {
         // データベースから書籍データを取得
-        const response = await fetch(`/api/book-data?isbn=${isbn}`);
+        const response = await fetch(`/api/book-info?isbn=${isbn}&type=chart`);
         if (response.ok) {
           const data = await response.json();
           setBookData(data);
