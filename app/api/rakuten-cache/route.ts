@@ -33,17 +33,6 @@ export async function GET(request: NextRequest) {
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       console.log(`キャッシュヒット: ${normalizedIsbn}`);
       
-      // キャッシュヒットを記録
-      try {
-        await fetch('/api/api-monitor?action=track-cache', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ hit: true })
-        });
-      } catch (error) {
-        console.error('キャッシュ追跡エラー:', error);
-      }
-      
       return NextResponse.json({
         ...cached.data,
         cached: true,
@@ -60,28 +49,10 @@ export async function GET(request: NextRequest) {
     const AFFILIATE_ID = "49bc895f.748bd82f.49bc8960.04343aac";
     const apiUrl = `https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=${RAKUTEN_APP_ID}&isbn=${normalizedIsbn}&affiliateId=${AFFILIATE_ID}&format=json`;
 
-    // 楽天API利用を記録
-    try {
-      await fetch('/api/api-monitor?action=track-rakuten', { method: 'POST' });
-    } catch (error) {
-      console.error('楽天API追跡エラー:', error);
-    }
-
     const response = await fetch(apiUrl);
     
     if (response.status === 429) {
       console.log('楽天APIの利用制限に達しました');
-      
-      // キャッシュミスを記録
-      try {
-        await fetch('/api/api-monitor?action=track-cache', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ hit: false })
-        });
-      } catch (error) {
-        console.error('キャッシュ追跡エラー:', error);
-      }
       
       return NextResponse.json({
         title: null,
@@ -152,17 +123,6 @@ export async function GET(request: NextRequest) {
       data: result,
       timestamp: Date.now()
     });
-
-    // キャッシュミスを記録
-    try {
-      await fetch('/api/api-monitor?action=track-cache', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hit: false })
-      });
-    } catch (error) {
-      console.error('キャッシュ追跡エラー:', error);
-    }
 
     console.log(`キャッシュ保存: ${normalizedIsbn}`);
     return NextResponse.json(result);

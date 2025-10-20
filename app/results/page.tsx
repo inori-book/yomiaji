@@ -44,7 +44,6 @@ function ResultsPageContent() {
   const [rakutenLoading, setRakutenLoading] = useState(false);
   const [rakutenProgress, setRakutenProgress] = useState({ current: 0, total: 0 });
   const [ratings, setRatings] = useState<{ [isbn: string]: { averageRating: number; totalRatings: number } }>({});
-  const [apiStatus, setApiStatus] = useState<any>(null);
 
   const fetchRatings = async (results: SearchResult[]) => {
     const ratingsData: { [isbn: string]: { averageRating: number; totalRatings: number } } = {};
@@ -74,19 +73,6 @@ function ResultsPageContent() {
     return ratingsData;
   };
 
-  // API監視データを取得
-  const fetchApiStatus = async () => {
-    try {
-      const response = await fetch('/api/api-monitor?action=status');
-      if (response.ok) {
-        const status = await response.json();
-        setApiStatus(status);
-      }
-    } catch (error) {
-      console.error('API監視データ取得エラー:', error);
-    }
-  };
-
   useEffect(() => {
     const query = searchParams?.get('q');
     if (!query) {
@@ -94,9 +80,6 @@ function ResultsPageContent() {
       setLoading(false);
       return;
     }
-
-    // API監視データを取得
-    fetchApiStatus();
 
     const performSearch = async () => {
       // キャッシュチェック
@@ -205,9 +188,6 @@ function ResultsPageContent() {
           ratings: ratingsData
         };
         sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
-        
-        // API監視データを更新
-        fetchApiStatus();
       } catch (err) {
         setError(err instanceof Error ? err.message : '検索中にエラーが発生しました');
       } finally {
