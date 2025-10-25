@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
+import path from 'path';
 
 export async function GET(request: NextRequest) {
   try {
     // Pythonスクリプトを実行してキーワードを抽出
-    const pythonProcess = spawn('python3', [process.cwd() + '/extract_keywords.py']);
+    const scriptPath = path.join(process.cwd(), 'extract_keywords.py');
+    console.log('Pythonスクリプトパス:', scriptPath);
+    console.log('作業ディレクトリ:', process.cwd());
+    const pythonProcess = spawn('python3', [scriptPath]);
     
     let result = '';
     let error = '';

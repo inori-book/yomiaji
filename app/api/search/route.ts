@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
+import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Pythonスクリプトを実行
-    const pythonProcess = spawn('python3', [process.cwd() + '/search_engine.py', query]);
+    const scriptPath = path.join(process.cwd(), 'search_engine.py');
+    console.log('Pythonスクリプトパス:', scriptPath);
+    console.log('作業ディレクトリ:', process.cwd());
+    const pythonProcess = spawn('python3', [scriptPath, query]);
     
     let result = '';
     let error = '';
