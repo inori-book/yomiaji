@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_18", "python3", "python3Packages.pandas", "python3Packages.numpy", "python3Packages.mecab-python3", "python3Packages.unidic-lite", "mecab", "python3Packages.pip"]
+nixPkgs = ["nodejs_18"]
 
 [phases.install]
 cmds = ["npm ci"]
@@ -8,5 +8,5 @@ cmds = ["npm ci"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "PYTHONPATH=/nix/store/*-python3-*/lib/python3.*/site-packages:$PYTHONPATH npm start"
+cmd = "npm start"
 
