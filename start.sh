@@ -7,11 +7,22 @@ PYTHON_PID=$!
 
 # Wait for Python API to be ready
 echo "Waiting for Python API to be ready..."
-sleep 5
+sleep 10
 
-# Check if Python API is running
-if ! kill -0 $PYTHON_PID 2>/dev/null; then
-    echo "Python API failed to start"
+# Check if Python API is running and responding
+for i in {1..30}; do
+    if curl -f http://127.0.0.1:8000/health >/dev/null 2>&1; then
+        echo "Python API is ready!"
+        break
+    fi
+    echo "Waiting for Python API... ($i/30)"
+    sleep 2
+done
+
+# Final check
+if ! curl -f http://127.0.0.1:8000/health >/dev/null 2>&1; then
+    echo "Python API failed to start or respond"
+    kill $PYTHON_PID 2>/dev/null
     exit 1
 fi
 

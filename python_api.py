@@ -70,10 +70,14 @@ if __name__ == "__main__":
     print(f"Python executable: {sys.executable}")
     print(f"Python path: {sys.path}")
     
-    uvicorn.run(
-        "python_api:app",
-        host="127.0.0.1",
-        port=8000,
-        reload=False,
-        log_level="info"
-    )
+    try:
+        uvicorn.run(
+            "python_api:app",
+            host="127.0.0.1",
+            port=8000,
+            reload=False,
+            log_level="info"
+        )
+    except Exception as e:
+        print(f"Failed to start Python API server: {e}")
+        sys.exit(1)
