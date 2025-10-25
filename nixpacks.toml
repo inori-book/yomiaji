@@ -2,7 +2,7 @@
 nixPkgs = ["nodejs_18", "python3", "python3Packages.pip", "python3Packages.pandas", "python3Packages.numpy", "mecab"]
 
 [phases.install]
-cmds = ["npm ci", "python3 -m venv /tmp/venv", "/tmp/venv/bin/pip install -r requirements.txt"]
+cmds = ["npm ci", "python3 -m venv /tmp/venv", "/tmp/venv/bin/pip install --upgrade pip", "/tmp/venv/bin/pip install numpy pandas mecab-python3 unidic-lite"]
 
 [phases.build]
 cmds = ["npm run build"]
