@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const scriptPath = path.join(process.cwd(), 'search_engine.py');
     console.log('Pythonスクリプトパス:', scriptPath);
     console.log('作業ディレクトリ:', process.cwd());
-    const pythonProcess = spawn('/tmp/venv/bin/python', [scriptPath, query]);
+    const pythonProcess = spawn('python3', [scriptPath, query]);
     
     let result = '';
     let error = '';
