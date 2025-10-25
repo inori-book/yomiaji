@@ -32,8 +32,12 @@ COPY . .
 # Build Next.js application
 RUN npm run build
 
-# Expose port
-EXPOSE 3000
+# Make start script executable
+RUN chmod +x start.sh
 
-# Start the application
-CMD ["npm", "start"]
+# Expose ports
+EXPOSE 3000
+EXPOSE 8000
+
+# Start both Python API and Next.js
+CMD ["./start.sh"]

@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { spawn } from 'child_process';
-import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,53 +11,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Pythonスクリプトを実行
-    const scriptPath = path.join(process.cwd(), 'search_engine.py');
-    console.log('Pythonスクリプトパス:', scriptPath);
-    console.log('作業ディレクトリ:', process.cwd());
-    const pythonProcess = spawn('python3', [scriptPath, query]);
-    
-    let result = '';
-    let error = '';
-
-    // 標準出力を取得
-    pythonProcess.stdout.on('data', (data) => {
-      result += data.toString();
+    // Python API サーバーにリクエストを送信
+    const pythonApiUrl = process.env.PYTHON_API_URL || 'http://127.0.0.1:8000';
+    const response = await fetch(`${pythonApiUrl}/search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
     });
 
-    // エラー出力を取得
-    pythonProcess.stderr.on('data', (data) => {
-      error += data.toString();
-    });
+    if (!response.ok) {
+      console.error('Python API error:', response.status, response.statusText);
+      return NextResponse.json(
+        { error: '検索処理中にエラーが発生しました' },
+        { status: 500 }
+      );
+    }
 
-    // プロセス完了を待機
-    return new Promise<Response>((resolve) => {
-      pythonProcess.on('close', (code) => {
-        if (code !== 0) {
-          console.error('Pythonスクリプトエラー:', error);
-          resolve(
-            NextResponse.json(
-              { error: '検索処理中にエラーが発生しました' },
-              { status: 500 }
-            )
-          );
-          return;
-        }
-
-        try {
-          const searchResults = JSON.parse(result);
-          resolve(NextResponse.json(searchResults));
-        } catch (parseError) {
-          console.error('JSON解析エラー:', parseError);
-          resolve(
-            NextResponse.json(
-              { error: '検索結果の解析に失敗しました' },
-              { status: 500 }
-            )
-          );
-        }
-      });
-    });
+    const result = await response.json();
+    return NextResponse.json(result);
 
   } catch (error) {
     console.error('APIエラー:', error);
