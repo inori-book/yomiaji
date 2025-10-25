@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Pythonスクリプトを実行
-    const pythonProcess = spawn('python3', ['search_engine.py', query]);
+    const pythonProcess = spawn('python3', [process.cwd() + '/search_engine.py', query]);
     
     let result = '';
     let error = '';

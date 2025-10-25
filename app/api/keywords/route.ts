@@ -4,7 +4,7 @@ import { spawn } from 'child_process';
 export async function GET(request: NextRequest) {
   try {
     // Pythonスクリプトを実行してキーワードを抽出
-    const pythonProcess = spawn('python3', ['extract_keywords.py']);
+    const pythonProcess = spawn('python3', [process.cwd() + '/extract_keywords.py']);
     
     let result = '';
     let error = '';
