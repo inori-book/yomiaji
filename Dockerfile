@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y \
     mecab \
     mecab-ipadic-utf8 \
     libmecab-dev \
+    curl \
+    ca-certificates \
+    gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js
