@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["nodejs_18", "python3", "python3Packages.pip", "python3Packages.pandas", "python3Packages.mecab-python3", "python3Packages.unidic-lite", "python3Packages.numpy"]
+nixPkgs = ["nodejs_18", "python3", "python3Packages.pip", "python3Packages.pandas", "python3Packages.mecab-python3", "python3Packages.unidic-lite", "python3Packages.numpy", "mecab", "mecab-ipadic-utf8"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm ci", "python3 -m venv /tmp/venv", "/tmp/venv/bin/pip install -r requirements.txt"]
 
 [phases.build]
 cmds = ["npm run build"]

@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const scriptPath = path.join(process.cwd(), 'extract_keywords.py');
     console.log('Pythonスクリプトパス:', scriptPath);
     console.log('作業ディレクトリ:', process.cwd());
-    const pythonProcess = spawn('python3', [scriptPath]);
+    const pythonProcess = spawn('/tmp/venv/bin/python', [scriptPath]);
     
     let result = '';
     let error = '';
