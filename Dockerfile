@@ -17,7 +17,10 @@ WORKDIR /app
 
 # Python packages that are not available in apt
 RUN python3 -m pip install --break-system-packages \
-    fastapi uvicorn mecab-python3 unidic-lite
+    fastapi uvicorn[standard] mecab-python3 unidic-lite
+
+# Verify mecab-python3 installation
+RUN python3 -c "import MeCab; print('MeCab import successful')"
 
 # アプリ一式
 COPY . /app
