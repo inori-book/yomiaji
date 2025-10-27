@@ -70,7 +70,18 @@ if __name__ == "__main__":
     print(f"Python executable: {sys.executable}")
     print(f"Python path: {sys.path}")
     
+    # Test imports
     try:
+        import pandas as pd
+        import MeCab
+        import unidic_lite
+        print("All required packages imported successfully")
+    except ImportError as e:
+        print(f"Import error: {e}")
+        sys.exit(1)
+    
+    try:
+        print("Starting Uvicorn server on 127.0.0.1:8000...")
         uvicorn.run(
             "python_api:app",
             host="127.0.0.1",
@@ -80,4 +91,6 @@ if __name__ == "__main__":
         )
     except Exception as e:
         print(f"Failed to start Python API server: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
