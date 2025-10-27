@@ -48,15 +48,12 @@ curl -fsS "$HEALTH_URL" || { log "Health check failed"; exit 1; }
 log "Installing Node deps (if needed)"
 if command -v yarn >/dev/null 2>&1; then
   yarn install --frozen-lockfile || yarn install
-  log "Building Next with memory optimization"
-  NODE_OPTIONS="--max-old-space-size=1024" yarn build
-  log "Starting Next on :$NEXT_PORT"
-  yarn start -p "$NEXT_PORT" &
+  log "Starting Next in development mode (memory optimization)"
+  NODE_OPTIONS="--max-old-space-size=512 --max-semi-space-size=64" yarn dev -p "$NEXT_PORT" &
   WEB_PID=$!
 else
   npm ci || npm i
-  NODE_OPTIONS="--max-old-space-size=1024" npm run build
-  npm run start -- -p "$NEXT_PORT" &
+  NODE_OPTIONS="--max-old-space-size=512 --max-semi-space-size=64" npm run dev -- -p "$NEXT_PORT" &
   WEB_PID=$!
 fi
 

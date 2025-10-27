@@ -14,13 +14,15 @@ const nextConfig: NextConfig = {
   // Memory optimization for Railway
   experimental: {
     memoryBasedWorkersCount: true,
+    // Reduce memory usage during build
+    workerThreads: false,
   },
-  // Reduce memory usage during build
-  swcMinify: true,
   // Optimize bundle size
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  // Reduce memory usage
+  output: 'standalone',
 };
 
 export default nextConfig;
