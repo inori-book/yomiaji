@@ -1,25 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { pyKeywords } from '@/lib/py';
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // Python API サーバーにリクエストを送信
-    const pythonApiUrl = process.env.PYTHON_API_URL || 'http://127.0.0.1:8000';
-    const response = await fetch(`${pythonApiUrl}/keywords`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const { text } = await request.json();
 
-    if (!response.ok) {
-      console.error('Python API error:', response.status, response.statusText);
+    if (!text || typeof text !== 'string') {
       return NextResponse.json(
-        { error: 'キーワード抽出に失敗しました' },
-        { status: 500 }
+        { error: 'テキストが必要です' },
+        { status: 400 }
       );
     }
 
-    const result = await response.json();
+    const result = await pyKeywords(text);
     return NextResponse.json(result);
 
   } catch (error) {

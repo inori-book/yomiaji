@@ -1,81 +1,65 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Set error handling
-set -e
+PY_HOST="127.0.0.1"
+PY_PORT="${PY_PORT:-8001}"
+NEXT_PORT="${PORT:-3000}"
+HEALTH_URL="http://$PY_HOST:$PY_PORT/health"
 
-# Function to check if port is in use
-check_port() {
-    local port=$1
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-        return 0
-    else
-        return 1
-    fi
-}
+log(){ echo "[start] $*" >&2; }
 
-# Function to wait for port
-wait_for_port() {
-    local port=$1
-    local max_attempts=30
-    local attempt=0
-    
-    while [ $attempt -lt $max_attempts ]; do
-        if check_port $port; then
-            echo "Port $port is ready!"
-            return 0
-        fi
-        echo "Waiting for port $port... ($((attempt + 1))/$max_attempts)"
-        sleep 2
-        attempt=$((attempt + 1))
-    done
-    
-    echo "Port $port failed to become ready"
-    return 1
-}
+log "Node: $(node -v 2>/dev/null || echo missing)"
+log "Python: $(python3 -V 2>/dev/null || echo missing)"
+log "Pip: $(python3 -m pip --version 2>/dev/null || echo missing)"
 
-# Check Python installation
-echo "Checking Python installation..."
-python3 --version || {
-    echo "Python3 not found!"
+python3 - <<'PY' || { echo "[start] Python import FAILED"; exit 1; }
+import sys
+print("PY_EXE:", sys.executable, flush=True)
+try:
+    import numpy, pandas, mecab
+    print("NUMPY:", numpy.__version__, "PANDAS:", pandas.__version__, flush=True)
+except Exception as e:
+    print("IMPORT_ERR:", repr(e), flush=True)
+    raise
+PY
+
+log "Starting Python API on ${PY_HOST}:${PY_PORT}"
+uvicorn python.app:app --host "$PY_HOST" --port "$PY_PORT" --log-level info &
+PY_PID=$!
+
+for i in $(seq 1 10); do
+  sleep 2
+  if curl -fsS "$HEALTH_URL" >/dev/null; then
+    log "Python API is up: $HEALTH_URL"
+    break
+  fi
+  if ! kill -0 "$PY_PID" 2>/dev/null; then
+    log "Python API process exited early"
+    wait "$PY_PID" || true
     exit 1
-}
+  fi
+  log "Waiting Python API... ($i/10)"
+done
+curl -fsS "$HEALTH_URL" || { log "Health check failed"; exit 1; }
 
-# Check if required packages are installed
-echo "Checking Python packages..."
-python3 -c "import pandas, mecab, unidic_lite, fastapi, uvicorn" || {
-    echo "Required Python packages not found!"
-    echo "Installing packages..."
-    pip3 install -r requirements.txt
-}
-
-# Start Python API server in background
-echo "Starting Python API server..."
-python3 python_api.py &
-PYTHON_PID=$!
-
-# Wait for Python API to be ready
-echo "Waiting for Python API to be ready..."
-if wait_for_port 8000; then
-    echo "Python API started successfully with PID: $PYTHON_PID"
+log "Installing Node deps (if needed)"
+if command -v yarn >/dev/null 2>&1; then
+  yarn install --frozen-lockfile || yarn install
+  log "Building Next"
+  yarn build
+  log "Starting Next on :$NEXT_PORT"
+  yarn start -p "$NEXT_PORT" &
+  WEB_PID=$!
 else
-    echo "Python API failed to start"
-    kill $PYTHON_PID 2>/dev/null || true
-    exit 1
+  npm ci || npm i
+  npm run build
+  npm run start -- -p "$NEXT_PORT" &
+  WEB_PID=$!
 fi
 
-# Start Next.js application
-echo "Starting Next.js application..."
-npm start
-
-# Cleanup function
-cleanup() {
-    echo "Shutting down..."
-    kill $PYTHON_PID 2>/dev/null || true
-    exit 0
-}
-
-# Set trap for cleanup
-trap cleanup SIGTERM SIGINT
-
-# Wait for Python process
-wait $PYTHON_PID
+trap 'log "Shutting down"; kill $PY_PID $WEB_PID 2>/dev/null || true' INT TERM
+wait -n $PY_PID $WEB_PID
+log "A child process exited; terminating the other."
+kill $PY_PID $WEB_PID 2>/dev/null || true
+wait || true
+exit 1

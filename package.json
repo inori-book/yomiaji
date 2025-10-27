@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "install-python-deps": "pip install -r requirements.txt"
+    "build": "next build",
+    "start": "next start -p $PORT"
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",

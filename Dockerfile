@@ -1,47 +1,27 @@
-# Use Ubuntu as base image
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-venv \
-    mecab \
-    mecab-ipadic-utf8 \
-    libmecab-dev \
-    curl \
-    ca-certificates \
-    gnupg \
-    lsof \
-    && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
+# OS deps (MeCab等) + Python + Node
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates build-essential mecab libmecab2 mecab-ipadic-utf8 \
+    python3 python3-pip python3-venv python3-dev \
+    nodejs npm \
+ && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# 任意: Node 20 系を安定化
+RUN npm install -g corepack && corepack enable
+
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-RUN npm ci
+# Python deps (wheel 強制でビルド事故回避)
+COPY requirements.txt /app/requirements.txt
+RUN python3 -m pip install --upgrade pip setuptools wheel \
+ && python3 -m pip install --no-cache-dir --only-binary=:all: -r requirements.txt
 
-# Copy Python requirements
-COPY requirements.txt ./
-RUN pip3 install -r requirements.txt
+# アプリ一式
+COPY . /app
 
-# Copy application files
-COPY . .
-
-# Build Next.js application
-RUN npm run build
-
-# Make start script executable
-RUN chmod +x start.sh
-
-# Expose ports
-EXPOSE 3000
-EXPOSE 8000
-
-# Start both Python API and Next.js
-CMD ["./start.sh"]
+# エントリポイント
+RUN chmod +x /app/start.sh
+CMD ["/app/start.sh"]
