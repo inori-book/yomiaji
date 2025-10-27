@@ -1,16 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'thumbnail.image.rakuten.co.jp',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
   // Memory optimization for Railway
   experimental: {
     memoryBasedWorkersCount: true,
@@ -27,6 +17,14 @@ const nextConfig: NextConfig = {
   // Disable image optimization for static export
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'thumbnail.image.rakuten.co.jp',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 
