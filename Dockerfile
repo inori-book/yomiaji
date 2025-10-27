@@ -2,10 +2,11 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# OS deps (MeCab等) + Python + Node
+# OS deps (MeCab等) + Python + Node + Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates build-essential mecab libmecab2 mecab-ipadic-utf8 \
-    python3 python3-pip python3-venv python3-dev \
+    python3 python3-pip python3-venv python3-dev python3-full \
+    python3-numpy python3-pandas python3-setuptools python3-wheel \
     nodejs npm \
  && rm -rf /var/lib/apt/lists/*
 
@@ -14,10 +15,9 @@ RUN npm install -g corepack && corepack enable
 
 WORKDIR /app
 
-# Python deps (wheel 強制でビルド事故回避)
-COPY requirements.txt /app/requirements.txt
-RUN python3 -m pip install --upgrade pip setuptools wheel \
- && python3 -m pip install --no-cache-dir --only-binary=:all: -r requirements.txt
+# Python packages that are not available in apt
+RUN python3 -m pip install --break-system-packages \
+    fastapi uvicorn mecab-python3 unidic-lite
 
 # アプリ一式
 COPY . /app

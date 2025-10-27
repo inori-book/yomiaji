@@ -16,8 +16,9 @@ python3 - <<'PY' || { echo "[start] Python import FAILED"; exit 1; }
 import sys
 print("PY_EXE:", sys.executable, flush=True)
 try:
-    import numpy, pandas, mecab
+    import numpy, pandas, mecab, fastapi, uvicorn
     print("NUMPY:", numpy.__version__, "PANDAS:", pandas.__version__, flush=True)
+    print("FASTAPI:", fastapi.__version__, "UVICORN:", uvicorn.__version__, flush=True)
 except Exception as e:
     print("IMPORT_ERR:", repr(e), flush=True)
     raise
