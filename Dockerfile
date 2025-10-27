@@ -27,4 +27,8 @@ COPY . /app
 
 # エントリポイント
 RUN chmod +x /app/start.sh
+
+# Set memory limits for Node.js
+ENV NODE_OPTIONS="--max-old-space-size=1024"
+
 CMD ["/app/start.sh"]
