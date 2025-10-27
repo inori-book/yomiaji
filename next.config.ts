@@ -21,8 +21,13 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  // Reduce memory usage
-  output: 'standalone',
+  // Reduce memory usage - use static export
+  output: 'export',
+  trailingSlash: true,
+  // Disable image optimization for static export
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

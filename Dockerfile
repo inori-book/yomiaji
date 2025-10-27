@@ -29,6 +29,6 @@ COPY . /app
 RUN chmod +x /app/start.sh
 
 # Set memory limits for Node.js
-ENV NODE_OPTIONS="--max-old-space-size=512 --max-semi-space-size=64"
+ENV NODE_OPTIONS="--max-old-space-size=256 --max-semi-space-size=32"
 
 CMD ["/app/start.sh"]
