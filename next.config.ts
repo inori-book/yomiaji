@@ -1,31 +1,10 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Memory optimization for Railway
-  experimental: {
-    memoryBasedWorkersCount: true,
-    // Reduce memory usage during build
-    workerThreads: false,
-  },
-  // Optimize bundle size
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  // Reduce memory usage - use static export
-  output: 'export',
-  trailingSlash: true,
-  // Disable image optimization for static export
-  images: {
-    unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'thumbnail.image.rakuten.co.jp',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
+  output: 'standalone',                 // 静的exportは使わない（APIを残す）
+  productionBrowserSourceMaps: false,   // ビルド軽量化
+  images: { unoptimized: true },        // 画像最適化オフで軽量化
+  experimental: { forceSwcTransforms: true },
 };
 
 export default nextConfig;

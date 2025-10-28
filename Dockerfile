@@ -1,34 +1,34 @@
+# ---- Stage 1: Next build (Node only) ----
+FROM node:20-bullseye AS web-builder
+WORKDIR /app
+COPY package.json package-lock.json* yarn.lock* ./
+RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm ci; fi
+COPY . .
+RUN npm run build || yarn build
+RUN mkdir -p out-rt/.next && \
+    cp -r .next/standalone out-rt/ && \
+    cp -r .next/static out-rt/.next/static && \
+    cp -r public out-rt/public || true
+
+# ---- Stage 2: Runtime (Ubuntu + Python + Node) ----
 FROM ubuntu:24.04
-
 ENV DEBIAN_FRONTEND=noninteractive
-
-# OS deps (MeCab等) + Python + Node + Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates build-essential mecab libmecab2 mecab-ipadic-utf8 \
-    python3 python3-pip python3-venv python3-dev python3-full \
-    python3-numpy python3-pandas python3-setuptools python3-wheel \
+    curl ca-certificates build-essential \
+    python3 python3-pip python3-venv python3-dev \
+    mecab libmecab2 mecab-ipadic-utf8 \
     nodejs npm \
- && rm -rf /var/lib/apt/lists/*
-
-# 任意: Node 20 系を安定化
+  && rm -rf /var/lib/apt/lists/*
 RUN npm install -g corepack && corepack enable
 
 WORKDIR /app
+COPY requirements.txt /app/requirements.txt
+RUN python3 -m pip install --upgrade pip setuptools wheel && \
+    python3 -m pip install --no-cache-dir --only-binary=:all: -r requirements.txt
 
-# Python packages that are not available in apt
-RUN python3 -m pip install --break-system-packages \
-    fastapi uvicorn[standard] mecab-python3 unidic-lite
-
-# Verify mecab-python3 installation
-RUN python3 -c "import MeCab; print('MeCab import successful')"
-
-# アプリ一式
 COPY . /app
+COPY --from=web-builder /app/out-rt /app/.next-rt
 
-# エントリポイント
 RUN chmod +x /app/start.sh
-
-# Set memory limits for Node.js
-ENV NODE_OPTIONS="--max-old-space-size=256 --max-semi-space-size=32"
-
+ENV NEXT_STANDALONE_DIR="/app/.next-rt/standalone"
 CMD ["/app/start.sh"]
