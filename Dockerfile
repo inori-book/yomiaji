@@ -26,7 +26,7 @@ RUN npm install -g corepack && corepack enable
 WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 RUN python3 -m pip install --upgrade pip setuptools wheel && \
-    python3 -m pip install --no-cache-dir --only-binary=:all: -r requirements.txt
+    python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
 
 COPY . /app
 COPY --from=web-builder /app/out-rt /app/.next-rt
