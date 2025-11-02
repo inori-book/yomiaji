@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://yomiaji-production-1154.up.railway.app/$1"
+    }
+  ]
+}
