@@ -1,7 +1,9 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Vercel用: output: 'standalone'は削除（Vercelが自動的に最適化）
+  // 静的エクスポート（Serverless Functionsを完全に回避）
+  output: 'export',
+  trailingSlash: true,
   productionBrowserSourceMaps: false,   // ビルド軽量化
   images: { unoptimized: true },        // 画像最適化オフで軽量化
   experimental: { forceSwcTransforms: true },
