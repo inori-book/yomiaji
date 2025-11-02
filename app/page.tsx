@@ -13,6 +13,11 @@ export default function Home() {
 
   const isSearchActive = searchText.trim() !== "" || selectedOption !== "";
 
+  // ウォームアップ: Python APIを非同期で叩く
+  useEffect(() => {
+    fetch('/api/health', { cache: 'no-store' }).catch(() => {});
+  }, []);
+
   // キーワード一覧を取得
   useEffect(() => {
     const fetchKeywords = async () => {
