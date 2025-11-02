@@ -13,8 +13,8 @@ WORKDIR /app
 
 # Python packages（ルートにrequirements-python.txtを配置）
 COPY requirements-python.txt /app/requirements.txt
-RUN python3 -m pip install --upgrade --break-system-packages pip setuptools wheel && \
-    python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
+# pip/setuptools/wheelは既にシステムにインストールされているので、requirements.txtのみインストール
+RUN python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
 
 # アプリケーションコード
 COPY python/app.py /app/python/app.py
