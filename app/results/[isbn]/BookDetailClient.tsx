@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -44,8 +44,16 @@ interface BookDetailClientProps {
 
 export default function BookDetailClient({ isbn }: BookDetailClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = searchParams?.get('q') || '';
+  // URLパラメータをクライアント側で取得（output: exportではuseSearchParamsが使えない）
+  const [query, setQuery] = useState('');
+  
+  useEffect(() => {
+    // クライアント側でURLパラメータを取得
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      setQuery(urlParams.get('q') || '');
+    }
+  }, []);
 
   const [bookData, setBookData] = useState<BookData | null>(null);
   const [rakutenInfo, setRakutenInfo] = useState<RakutenBookInfo | null>(null);
