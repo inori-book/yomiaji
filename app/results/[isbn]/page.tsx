@@ -1,7 +1,7 @@
-import { notFound } from 'next/navigation';
 import BookDetailClient from './BookDetailClient';
 
 // 静的生成用: すべてのISBNをビルド時に生成
+// output: 'export'ではgenerateStaticParamsはサポートされているが、動的ルーティングは完全静的になる
 export async function generateStaticParams() {
   // database.csvからすべてのISBNを取得
   const fs = await import('fs');

@@ -29,7 +29,6 @@ export const metadata: Metadata = {
   description: "一読み味で探す毒書体験 - 読む前の自分には戻れなくなるような毒書を探そう",
   keywords: ["本", "書籍", "読書", "毒書", "感想", "レビュー", "検索"],
   authors: [{ name: "YOMIAJI Team" }],
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
   openGraph: {
     title: "YOMIAJI: βテスト版",
@@ -42,6 +41,11 @@ export const metadata: Metadata = {
     title: "YOMIAJI: βテスト版",
     description: "一読み味で探す毒書体験",
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

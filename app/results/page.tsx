@@ -1,7 +1,6 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -33,9 +32,9 @@ interface RakutenBookInfo {
   description: string | null;
 }
 
-function ResultsPageContent() {
-  const searchParams = useSearchParams();
+export default function ResultsPage() {
   const router = useRouter();
+  const [query, setQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +43,20 @@ function ResultsPageContent() {
   const [rakutenLoading, setRakutenLoading] = useState(false);
   const [rakutenProgress, setRakutenProgress] = useState({ current: 0, total: 0 });
   const [ratings, setRatings] = useState<{ [isbn: string]: { averageRating: number; totalRatings: number } }>({});
+
+  // URLパラメータをクライアント側で取得（output: 'export'ではuseSearchParamsが使えない）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const q = urlParams.get('q');
+      if (q) {
+        setQuery(q);
+      } else {
+        setError('検索クエリが指定されていません');
+        setLoading(false);
+      }
+    }
+  }, []);
 
   const fetchRatings = async (results: SearchResult[]) => {
     const ratingsData: { [isbn: string]: { averageRating: number; totalRatings: number } } = {};
@@ -74,10 +87,7 @@ function ResultsPageContent() {
   };
 
   useEffect(() => {
-    const query = searchParams?.get('q');
     if (!query) {
-      setError('検索クエリが指定されていません');
-      setLoading(false);
       return;
     }
 
@@ -196,7 +206,7 @@ function ResultsPageContent() {
     };
 
     performSearch();
-  }, [searchParams]);
+  }, [query]);
 
   const toggleExpanded = (isbn: string) => {
     setExpandedBooks(prev => ({
@@ -510,18 +520,5 @@ function ResultsPageContent() {
         </div>
       </main>
     </div>
-  );
-}
-
-
-export default function ResultsPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-xl">読み込み中...</div>
-      </div>
-    </div>}>
-      <ResultsPageContent />
-    </Suspense>
   );
 }
