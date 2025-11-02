@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -40,11 +40,12 @@ interface DatabaseBookInfo {
 
 interface BookDetailClientProps {
   isbn: string;
-  query: string;
 }
 
-export default function BookDetailClient({ isbn, query }: BookDetailClientProps) {
+export default function BookDetailClient({ isbn }: BookDetailClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const query = searchParams?.get('q') || '';
 
   const [bookData, setBookData] = useState<BookData | null>(null);
   const [rakutenInfo, setRakutenInfo] = useState<RakutenBookInfo | null>(null);

@@ -28,12 +28,11 @@ export async function generateStaticParams() {
 
 interface PageProps {
   params: Promise<{ isbn: string }>;
-  searchParams: Promise<{ q?: string }>;
 }
 
-export default async function BookDetailPage({ params, searchParams }: PageProps) {
+export default async function BookDetailPage({ params }: PageProps) {
   const { isbn } = await params;
-  const { q: query } = await searchParams;
   
-  return <BookDetailClient isbn={isbn} query={query || ''} />;
+  // searchParamsはoutput: 'export'では使えないため、クライアント側で取得
+  return <BookDetailClient isbn={isbn} />;
 }
