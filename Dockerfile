@@ -2,7 +2,9 @@
 FROM node:20-bullseye AS web-builder
 WORKDIR /app
 COPY package.json package-lock.json* yarn.lock* ./
-RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm ci; fi
+RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then npm ci; \
+    else npm install; fi
 COPY . .
 RUN npm run build || yarn build
 RUN mkdir -p out-rt/.next && \
