@@ -1,0 +1,4 @@
+# Next.js内部ファイルを除外してServerless Functionsの生成を防ぐ
+.next/**
+node_modules/**
+
