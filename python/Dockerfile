@@ -11,12 +11,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Python packages（ビルドコンテキストはルート）
+# Python packages
 COPY python/requirements.txt /app/requirements.txt
 RUN python3 -m pip install --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
 
-# アプリケーションコード
+# アプリケーションコード（ビルドコンテキストはルート）
 COPY python/app.py /app/python/app.py
 COPY search_engine.py /app/
 COPY extract_keywords.py /app/
