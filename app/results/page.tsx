@@ -303,7 +303,7 @@ export default function ResultsPage() {
               ref={searchInputRef}
               type="text"
               placeholder="検索キーワードを入力"
-              defaultValue={searchResults.query}
+              defaultValue={searchResults?.query || ''}
               className="flex-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-600 text-sm"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -315,12 +315,20 @@ export default function ResultsPage() {
               }}
             />
             <button 
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('検索ボタンがクリックされました');
+                console.log('searchInputRef.current:', searchInputRef.current);
                 const query = searchInputRef.current?.value.trim();
+                console.log('検索クエリ:', query);
                 if (query) {
+                  console.log('検索実行:', `/results?q=${encodeURIComponent(query)}`);
                   router.push(`/results?q=${encodeURIComponent(query)}`);
+                } else {
+                  console.warn('検索クエリが空です');
                 }
               }}
+              type="button"
               className="px-4 py-2 bg-orange-500 text-black font-bold rounded hover:bg-orange-600 flex-shrink-0 text-sm"
             >
               検索
