@@ -1,6 +1,5 @@
 [build]
-  # requirements.txtを一時的にリネームしてNetlifyのPython自動検出を回避
-  command = "if [ -f requirements.txt ]; then mv requirements.txt requirements.txt.netlify_ignore; fi && npm run build"
+  command = "npm run build"
   publish = "out"
   functions = ""  # Functions directoryを空にして静的サイトとして扱う
   

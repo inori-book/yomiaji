@@ -1,7 +1,5 @@
 # Python依存関係は不要（Railwayで実行）
-# ルートディレクトリのrequirements.txtを明示的に無視
-/requirements.txt
-requirements.txt
+# 注意: ルートのrequirements.txtは削除済み（Netlifyの自動検出を回避）
 requirements-python.txt
 python/
 *.py

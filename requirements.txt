@@ -1,6 +1,0 @@
-fastapi
-uvicorn[standard]
-numpy==2.1.1
-pandas==2.2.3
-mecab-python3==1.0.9
-unidic-lite==1.0.8
