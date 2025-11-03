@@ -1,6 +1,11 @@
 [build]
   command = "npm run build"
   publish = "out"
+  functions = ""  # Functions directoryを空にして静的サイトとして扱う
+  
+# 静的サイトとして扱う
+[build.environment]
+  NODE_VERSION = "20"
 
 [[redirects]]
   from = "/api/*"

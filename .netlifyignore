@@ -1,0 +1,22 @@
+# Python依存関係は不要（Railwayで実行）
+requirements.txt
+requirements-python.txt
+python/
+*.py
+extract_keywords.py
+search_engine.py
+
+# Docker関連ファイル
+Dockerfile
+Dockerfile.python
+start.sh
+
+# ビルド成果物
+out/
+.next/
+node_modules/
+
+# その他
+.github/workflows/
+backup/
+
