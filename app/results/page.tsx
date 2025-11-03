@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -34,6 +34,7 @@ interface RakutenBookInfo {
 
 export default function ResultsPage() {
   const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -299,6 +300,7 @@ export default function ResultsPage() {
           </button>
           <div className="flex w-full gap-2">
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="検索キーワードを入力"
               defaultValue={searchResults.query}
@@ -314,8 +316,7 @@ export default function ResultsPage() {
             />
             <button 
               onClick={() => {
-                const input = document.querySelector('input[type="text"]') as HTMLInputElement;
-                const query = input?.value.trim();
+                const query = searchInputRef.current?.value.trim();
                 if (query) {
                   router.push(`/results?q=${encodeURIComponent(query)}`);
                 }
