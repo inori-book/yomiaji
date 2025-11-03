@@ -309,7 +309,8 @@ export default function ResultsPage() {
                 if (e.key === 'Enter') {
                   const query = e.currentTarget.value.trim();
                   if (query) {
-                    router.push(`/results?q=${encodeURIComponent(query)}`);
+                    // 静的エクスポート環境ではwindow.location.hrefを使用
+                    window.location.href = `/results?q=${encodeURIComponent(query)}`;
                   }
                 }
               }}
@@ -317,15 +318,10 @@ export default function ResultsPage() {
             <button 
               onClick={(e) => {
                 e.preventDefault();
-                console.log('検索ボタンがクリックされました');
-                console.log('searchInputRef.current:', searchInputRef.current);
                 const query = searchInputRef.current?.value.trim();
-                console.log('検索クエリ:', query);
                 if (query) {
-                  console.log('検索実行:', `/results?q=${encodeURIComponent(query)}`);
-                  router.push(`/results?q=${encodeURIComponent(query)}`);
-                } else {
-                  console.warn('検索クエリが空です');
+                  // 静的エクスポート環境ではwindow.location.hrefを使用
+                  window.location.href = `/results?q=${encodeURIComponent(query)}`;
                 }
               }}
               type="button"
