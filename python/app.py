@@ -358,9 +358,29 @@ def search(request: SearchRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/keywords")
+def get_keywords():
+    """キーワード一覧を取得（TOPページの候補リスト用）"""
+    try:
+        result = subprocess.run(
+            ["python3", "extract_keywords.py"],
+            capture_output=True,
+            text=True,
+            cwd="/app"
+        )
+        
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"Keywords extraction failed: {result.stderr}")
+        
+        data = json.loads(result.stdout)
+        # extract_keywords.pyは{"keywords": [...], "total_count": ...}形式で返す
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/keywords")
-def keywords(request: KeywordsRequest):
-    """キーワード抽出"""
+def extract_keywords(request: KeywordsRequest):
+    """テキストからキーワード抽出（既存のエンドポイント）"""
     try:
         result = subprocess.run(
             ["python3", "extract_keywords.py"],

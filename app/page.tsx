@@ -22,10 +22,20 @@ export default function Home() {
   useEffect(() => {
     const fetchKeywords = async () => {
       try {
+        console.log('キーワード取得開始: /api/keywords');
         const response = await fetch('/api/keywords');
+        console.log('レスポンスステータス:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
-          setKeywords(data.keywords || []);
+          console.log('取得データ:', data);
+          const keywordsArray = data.keywords || data || [];
+          console.log('キーワード配列:', keywordsArray);
+          setKeywords(keywordsArray);
+        } else {
+          console.error('キーワード取得失敗:', response.status, response.statusText);
+          const errorText = await response.text();
+          console.error('エラーレスポンス:', errorText);
         }
       } catch (error) {
         console.error('キーワード取得エラー:', error);
