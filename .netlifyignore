@@ -1,4 +1,6 @@
 # Python依存関係は不要（Railwayで実行）
+# ルートディレクトリのrequirements.txtを明示的に無視
+/requirements.txt
 requirements.txt
 requirements-python.txt
 python/

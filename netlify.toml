@@ -1,11 +1,16 @@
 [build]
-  command = "npm run build"
+  # requirements.txtを一時的にリネームしてNetlifyのPython自動検出を回避
+  command = "if [ -f requirements.txt ]; then mv requirements.txt requirements.txt.netlify_ignore; fi && npm run build"
   publish = "out"
   functions = ""  # Functions directoryを空にして静的サイトとして扱う
   
 # 静的サイトとして扱う
 [build.environment]
   NODE_VERSION = "20"
+  # Python環境を明示的に無効化（Netlifyの自動検出を回避）
+  PYTHON_VERSION = ""
+  # Pythonパッケージマネージャーを無効化
+  PIPENV_DISABLE_ACTIVE = "1"
 
 [[redirects]]
   from = "/api/*"
