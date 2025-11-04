@@ -33,28 +33,59 @@ YOMIAJIは、読む前の自分には戻れなくなるような"毒書"を、�
 
 ### インストール
 
-1. リポジトリをクローン
+1. リポジトリをクローン（既にクローン済みの場合は不要）
 ```bash
 git clone https://github.com/inori-book/yomiaji.git
 cd yomiaji
 ```
 
-2. 依存関係をインストール
+2. **フロントエンド（Next.js）の依存関係をインストール**
 ```bash
 npm install
-pip install -r requirements.txt
 ```
 
-3. 環境変数を設定
+3. **バックエンド（Python API）の依存関係をインストール**
 ```bash
-cp .env.local.example .env.local
-# .env.localに楽天ブックスAPIキーを設定
+cd python
+pip install -r requirements.txt
+cd ..
 ```
 
-4. 開発サーバーを起動
+4. **環境変数を設定**
+```bash
+# フロントエンド用（Railway APIのURLを指定）
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+
+# バックエンド用（Python API用）
+echo "RAKUTEN_APP_ID=your_rakuten_app_id_here" >> python/.env
+```
+
+5. **開発サーバーを起動**
+
+**ターミナル1: Python API（バックエンド）**
+```bash
+cd python
+uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**ターミナル2: Next.js（フロントエンド）**
 ```bash
 npm run dev
 ```
+
+ブラウザで `http://localhost:3000` にアクセス
+
+### 本番環境との違い
+
+- **本番環境**: 
+  - Next.js (フロントエンド) → Netlify
+  - FastAPI (バックエンド) → Railway
+  - `/api/*` は Netlify のリダイレクト経由で Railway に接続
+
+- **ローカル環境**:
+  - Next.js → `http://localhost:3000`
+  - FastAPI → `http://localhost:8000`
+  - `/api/*` は `netlify.toml` のリダイレクト設定が効かないため、直接 FastAPI を呼び出す設定が必要
 
 ## 📊 データ構造
 
